@@ -252,12 +252,12 @@ void setup() {
   snprintf(node_config.root_node.basic_information.node_label, sizeof(node_config.root_node.basic_information.node_label), "ESP32 Hub");
   node_t *node = node::create(&node_config, on_attribute_update, on_identification);
 
-  bridged_node::config_t bridged_node_config;
-  bridged_node_config.bridged_device_basic_information.cluster_revision = 1;
-  bridged_node_config.bridged_device_basic_information.reachable = true;
+  // bridged_node::config_t bridged_node_config;
+  // bridged_node_config.bridged_device_basic_information.cluster_revision = 1;
+  // bridged_node_config.bridged_device_basic_information.reachable = true;
 
-  // ブリッジ(Aggregator)のエンドポイントを作成
-  endpoint_t *aggr_endpoint = aggregator::create(node, ENDPOINT_FLAG_NONE, NULL);
+  // // ブリッジ(Aggregator)のエンドポイントを作成
+  // endpoint_t *aggr_endpoint = aggregator::create(node, ENDPOINT_FLAG_NONE, NULL);
 
   #if ENABLE_TEMP
   // Setup temperature censor
@@ -294,12 +294,13 @@ void setup() {
   therm_config.thermostat.local_temperature = lastTemp * 100; // センサーから取得した値を入れる
   therm_config.thermostat.system_mode = 0; // デフォルトはオフにする
 
-  therm_endpoint = bridged_node::create(node, &bridged_node_config, ENDPOINT_FLAG_NONE, NULL);
-  thermostat::add(therm_endpoint, &therm_config);
-  print_endpoint_info("thermostat", therm_endpoint);
+  // endpoint_t *therm_endpoint = bridged_node::create(node, &bridged_node_config, ENDPOINT_FLAG_NONE, NULL);
+  // thermostat::add(therm_endpoint, &therm_config);
+  // print_endpoint_info("thermostat", therm_endpoint);
 
-  therm_endpoint_id = endpoint::get_id(therm_endpoint);
-  print_endpoint_info("Thermostat_endpoint", therm_endpoint);
+  // therm_endpoint_id = endpoint::get_id(therm_endpoint);
+  // print_endpoint_info("Thermostat_endpoint", therm_endpoint);
+
   endpoint_t *therm_endpoint = endpoint::thermostat::create(node, &therm_config, ENDPOINT_FLAG_NONE, NULL);
   #endif
 
@@ -315,7 +316,7 @@ void setup() {
   #if ENABLE_HUMID
   set_parent_endpoint(humid_endpoint, aggr_endpoint);
   #endif
-  set_parent_endpoint(therm_endpoint, aggr_endpoint);
+  // set_parent_endpoint(therm_endpoint, aggr_endpoint);
 
   // Add additional feature
   therm_cluster = cluster::get(therm_endpoint, CLUSTER_ID_THERM);
