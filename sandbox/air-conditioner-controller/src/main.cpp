@@ -186,19 +186,25 @@ static esp_err_t on_attribute_update(attribute::callback_type_t type, uint16_t e
         Serial.print(" NEW THERM MODE: ");
         Serial.println(newValue);
         systemMode = newValue;
+        #if ENABLE_IR
         sendIrDebounced();
+        #endif
       }
       if (attribute_id == Thermostat::Attributes::OccupiedCoolingSetpoint::Id) {
         Serial.print(" NEW COOLING TEMP: ");
         Serial.println(newValue);
         occupiedCoolingSetpoint = newValue;
+        #if ENABLE_IR
         sendIrDebounced();
+        #endif      
       }
       if (attribute_id == Thermostat::Attributes::OccupiedHeatingSetpoint::Id) {
         Serial.print(" NEW HEATING TEMP: ");
         Serial.println(newValue);
         occupiedHeatingSetpoint = newValue;
+        #if ENABLE_IR
         sendIrDebounced();
+        #endif
       }
     }
   }
@@ -283,7 +289,6 @@ void setup() {
 
   #if ENABLE_THERM
   // Setup thermostat
-  endpoint_t *therm_endpoint;
   cluster_t *therm_cluster;
   thermostat::config_t therm_config;
   therm_config.thermostat.local_temperature = lastTemp * 100; // センサーから取得した値を入れる
@@ -295,6 +300,7 @@ void setup() {
 
   therm_endpoint_id = endpoint::get_id(therm_endpoint);
   print_endpoint_info("Thermostat_endpoint", therm_endpoint);
+  endpoint_t *therm_endpoint = endpoint::thermostat::create(node, &therm_config, ENDPOINT_FLAG_NONE, NULL);
   #endif
 
   // 各デバイスに名前をつける
@@ -313,10 +319,9 @@ void setup() {
 
   // Add additional feature
   therm_cluster = cluster::get(therm_endpoint, CLUSTER_ID_THERM);
-  cluster::thermostat::feature::cooling::config_t cooling_config;
-  cluster::thermostat::feature::heating::config_t heating_config;
 
   // units of temperature are in 0.01 Celsius for matter interactions
+  cluster::thermostat::feature::cooling::config_t cooling_config;
   cooling_config.abs_max_cool_setpoint_limit = maxCoolingSetpoint;
   cooling_config.abs_min_cool_setpoint_limit = minCoolingSetpoint;
   cooling_config.max_cool_setpoint_limit = maxCoolingSetpoint;
@@ -325,6 +330,7 @@ void setup() {
   cooling_config.occupied_cooling_setpoint = occupiedCoolingSetpoint;
   cluster::thermostat::feature::cooling::add(therm_cluster, &cooling_config);
 
+  cluster::thermostat::feature::heating::config_t heating_config;
   heating_config.abs_max_heat_setpoint_limit = maxHeatingSetpoint;
   heating_config.abs_min_heat_setpoint_limit = minHeatingSetpoint;
   heating_config.max_heat_setpoint_limit = maxHeatingSetpoint;
