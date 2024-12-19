@@ -1,18 +1,29 @@
+#define ENABLE_IR 0
+#define ENABLE_BME280 0
+#define ENABLE_TEMP 0
+#define ENABLE_HUMID 0
+#define ENABLE_THERM 1
+
 #include <Arduino.h>
 #include "Matter.h"
 #include <app/server/OnboardingCodesUtil.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
+#if ENABLE_BME280
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#endif
+#if ENABLE_IR
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_Sharp.h>
+#endif
 
 using namespace chip;
 using namespace chip::app::Clusters;
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 
+#if ENABLE_BME280
 // BME280の設定
 // ref: https://mirushirutechru.com/techru/3201/
 const int BME_CS = 15;
@@ -20,25 +31,32 @@ const int BME_SCK = 14;
 const int BME_MOSI = 13;
 const int BME_MISO = 12;
 Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK);
+#endif
 
 float lastTemp = 0;
 float lastHumid = 0;
 
+#if ENABLE_IR
 // IRremoteの設定
 const uint16_t kIrLed = 4;
 IRSharpAc ac(kIrLed);  // Set the GPIO to be used to sending the message.
+#endif
 
+#if ENABLE_TEMP
 // Cluster and attribute ID used by Matter Temperature censor device
 const uint32_t CLUSTER_ID_TEMP = TemperatureMeasurement::Id;
 const uint32_t ATTRIBUTE_ID_TEMP = TemperatureMeasurement::Attributes::MeasuredValue::Id;
 // Endpoint and attribute ref that will be assigned to Matter device
 uint16_t temp_endpoint_id = 0;
+#endif
 
+#if ENABLE_HUMID
 // Cluster and attribute ID used by Matter Humidity censor device
 const uint32_t CLUSTER_ID_HUMID = RelativeHumidityMeasurement::Id;
 const uint32_t ATTRIBUTE_ID_HUMID = RelativeHumidityMeasurement::Attributes::MeasuredValue::Id;
 // Endpoint and attribute ref that will be assigned to Matter device
 uint16_t humid_endpoint_id = 0;
+#endif
 
 // Cluster and attribute ID used by Matter thermostat device
 const uint32_t CLUSTER_ID_THERM = Thermostat::Id;
@@ -69,6 +87,7 @@ void checkSendIr();
 void print_endpoint_info(String clusterName, endpoint_t *endpoint);
 /* Function prototypes End */
 
+#if ENABLE_IR
 void printState() {
   // Display the settings.
   Serial.println("Sharp A/C remote is in the following state:");
@@ -135,6 +154,7 @@ void sendIr() {
   Serial.println(prevState);
   printState();
 }
+#endif
 
 // There is possibility to listen for various device events, related for example to setup process
 // Leaved as empty for simplicity
@@ -200,14 +220,17 @@ void setup() {
   esp_log_level_set("*", ESP_LOG_DEBUG);
 
   // ファブリックインデックス0のすべてのエントリを削除（必要なときだけコメントアウトを解除する）
-  chip::Access::AccessControl accessControl;
-  accessControl.DeleteAllEntriesForFabric(0x2);
+  // chip::Access::AccessControl accessControl;
+  // accessControl.DeleteAllEntriesForFabric(0x2);
 
+  #if ENABLE_BME280
   // Setup BME280
   bme.begin();
   lastTemp = bme.readTemperature();
   lastHumid = bme.readHumidity();
+  #endif
 
+  #if ENABLE_IR
   // Setup IRremote
   ac.begin();
   ac.setModel(sharp_ac_remote_model_t::A903);
@@ -216,6 +239,7 @@ void setup() {
   ac.setTurbo(false);
   ac.setIon(false);
   ac.setClean(false);
+  #endif
 
   // Setup Matter node
   node::config_t node_config;
@@ -229,6 +253,7 @@ void setup() {
   // ブリッジ(Aggregator)のエンドポイントを作成
   endpoint_t *aggr_endpoint = aggregator::create(node, ENDPOINT_FLAG_NONE, NULL);
 
+  #if ENABLE_TEMP
   // Setup temperature censor
   endpoint_t *temp_endpoint;
   temperature_sensor::config_t temp_config;
@@ -240,7 +265,9 @@ void setup() {
 
   temp_endpoint_id = endpoint::get_id(temp_endpoint);
   print_endpoint_info("temperature_sensor_endpoint", temp_endpoint);
+  #endif
 
+  #if ENABLE_HUMID
   // Setup humidity censor
   endpoint_t *humid_endpoint;
   humidity_sensor::config_t humid_config;
@@ -252,7 +279,9 @@ void setup() {
 
   humid_endpoint_id = endpoint::get_id(humid_endpoint);
   print_endpoint_info("humidity_sensor_endpoint", humid_endpoint);
+  #endif
 
+  #if ENABLE_THERM
   // Setup thermostat
   endpoint_t *therm_endpoint;
   cluster_t *therm_cluster;
@@ -266,15 +295,20 @@ void setup() {
 
   therm_endpoint_id = endpoint::get_id(therm_endpoint);
   print_endpoint_info("Thermostat_endpoint", therm_endpoint);
+  #endif
 
   // 各デバイスに名前をつける
-  cluster::bridged_device_basic_information::attribute::create_node_label(cluster::get(temp_endpoint, BridgedDeviceBasicInformation::Id), "Temp Censor", strlen("Temp Censor"));
-  cluster::bridged_device_basic_information::attribute::create_node_label(cluster::get(humid_endpoint, BridgedDeviceBasicInformation::Id), "Humid Censor", strlen("Humid Censor"));
-  cluster::bridged_device_basic_information::attribute::create_node_label(cluster::get(therm_endpoint, BridgedDeviceBasicInformation::Id), "Thermostat", strlen("Thermostat"));
+  // cluster::bridged_device_basic_information::attribute::create_node_label(cluster::get(temp_endpoint, BridgedDeviceBasicInformation::Id), "Temp Censor", strlen((const char*)"Temp Censor"));
+  // cluster::bridged_device_basic_information::attribute::create_node_label(cluster::get(humid_endpoint, BridgedDeviceBasicInformation::Id), "Humid Censor", strlen((const char*)"Humid Censor"));
+  // cluster::bridged_device_basic_information::attribute::create_node_label(cluster::get(therm_endpoint, BridgedDeviceBasicInformation::Id), "Thermostat", strlen((const char*)"Thermostat"));
 
   // 各デバイスのエンドポイントをブリッジに紐付ける
+  #if ENABLE_TEMP
   set_parent_endpoint(temp_endpoint, aggr_endpoint);
+  #endif
+  #if ENABLE_HUMID
   set_parent_endpoint(humid_endpoint, aggr_endpoint);
+  #endif
   set_parent_endpoint(therm_endpoint, aggr_endpoint);
 
   // Add additional feature
@@ -317,10 +351,13 @@ unsigned long timer = 0;
 
 void loop() {
   // 定期的にIR送信が必要ないかチェック
+  #if ENABLE_IR
   checkSendIr();
+  #endif
 
   if (millis() > timer) {
     timer = millis() + 10000;  // update timer
+    #if ENABLE_BME280
     float newTemp = bme.readTemperature();
     float newHumid = bme.readHumidity();
 
@@ -344,6 +381,7 @@ void loop() {
       matterValue = esp_matter_int16(newHumid * 100);
       attribute::update(humid_endpoint_id, CLUSTER_ID_HUMID, ATTRIBUTE_ID_HUMID, &matterValue);
     }
+    #endif
     
   }
 }
