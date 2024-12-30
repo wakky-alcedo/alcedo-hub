@@ -88,6 +88,37 @@ public:
 
         setPanel(&_panel_instance);
     }
+
+    void draw_slider(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t ratio) {
+        // fillRoundRect(x, y, width, height, height/2, TFT_WHITE); // 外枠
+        // fillRoundRect(x+2, y+2, width-4, height-4, (height-4)/2, TFT_BLACK); // 内側の黒い部分
+        // fillRoundRect(x+2, y+2, (width-4)*ratio/100, height-4, (height-4)/2, TFT_WHITE); // バー
+        // fillCircle(x+2+(width-4)*ratio/100, y+height/2, height/2-2, TFT_WHITE); // バーの丸い部分
+        // drawString(String(ratio), x+width+5, y+height/2); // バーの割合
+
+        drawRoundRect(x, y, width+height-4, height, height/2, TFT_WHITE); // 外枠
+        // fillRoundRect(x, y, width+height-4, height, height/2, TFT_WHITE); // 外枠
+        // fillRoundRect(x+2, y+2, width-4+height-4, height-4, (height-4)/2, TFT_BLACK); // 内側の黒い部分
+        fillRoundRect(x+2, y+2, (height-4) + (width-4)*ratio/100, height-4, (height-4)/2, TFT_WHITE); // バー
+        fillRoundRect(x+2, y+2, (height-4) + (width-4)*ratio/100, height-4, (height-4)/2, TFT_WHITE); // バー
+        fillCircle(x+height/2+(width)*ratio/100, y+height/2, height*1.2/2, TFT_WHITE); // バーの丸い部分
+        setFont(&fonts::Font2);
+        // 右寄せ3桁
+        if(ratio < 10){
+            drawString(String(ratio), x+width+height+5+textWidth(String(0))*2, y+height/2.0f-fontHeight()/2.0f); // バーの割合
+        }else if(ratio < 100){
+            drawString(String(ratio), x+width+height+5+textWidth(String(0)),   y+height/2.0f-fontHeight()/2.0f); // バーの割合
+        }else{
+            drawString(String(ratio), x+width+height+5,                        y+height/2.0f-fontHeight()/2.0f); // バーの割合
+        }
+    }
+
+    void draw_textbox(uint16_t x, uint16_t y, uint16_t width, uint16_t height, String text) {
+        fillRoundRect(x, y, width, height, height/4, TFT_WHITE); // 外枠
+        fillRoundRect(x+2, y+2, width-4, height-4, (height-4)/4, TFT_BLACK); // 内側の黒い部分
+        setFont(&fonts::Font2);
+        drawString(text, x+width/2-textWidth(text)/2, y+height/2.0f-fontHeight()/2.0f); // テキスト
+    }
 };
 
 #endif // DISPLAY_HPP_

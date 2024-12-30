@@ -2,6 +2,8 @@
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
 #include <display.hpp>
+#include <icon.hpp>
+#include <draw_screan.hpp>
 
 #include <Adafruit_BMP280.h>
 #include <Adafruit_AHTX0.h>
@@ -13,10 +15,17 @@
 #define PIN_SPEAKER 26
 
 LGFX display;
-LGFX_Sprite sprite(&display);      // lcdに描画するスプライト作成
+LGFX_Sprite sprite(&display);      // displayに描画するスプライト作成
+
 
 Adafruit_AHTX0 aht;
 Adafruit_BMP280 bmp;
+
+// uint16_t icon_y = 130;
+// uint16_t width = 320;
+// uint16_t height = 240;
+
+Screen current_screen = Screen::HOME;
 
 void setup(void) {
     display.init();
@@ -38,6 +47,9 @@ void setup(void) {
         // display.calibrateTouch(nullptr, fg, bg, std::max(display.width(), display.height()) >> 3);
     }
 
+    width = display.width();
+    height = display.height();
+
     display.fillScreen(TFT_BLACK);
 
     display.setBrightness(255); // 明るさの設定 なんかうまく反映されていなさそう？
@@ -54,8 +66,10 @@ void setup(void) {
 
     sprite.createSprite(100, 100);
 
-    aht.begin(&Wire, 0, AHTX0_I2CADDR_ALTERNATE);
-    bmp.begin();
+    // aht.begin(&Wire, 0, AHTX0_I2CADDR_ALTERNATE);
+    // bmp.begin();
+
+    draw_home_screen(display);
 }
 
 uint32_t count = ~0;
@@ -63,30 +77,76 @@ void loop(void) {
     // 明るさを取得
     uint16_t brightness = analogRead(34);
 
-    // 温度と湿度を取得
-    sensors_event_t humidity, temp;
-    aht.getEvent(&humidity, &temp); // AHT21から湿度と温度の取得
-    float temperature1 = temp.temperature;
-    uint8_t relative_humidity = humidity.relative_humidity;
+    // // 温度と湿度を取得
+    // sensors_event_t humidity, temp;
+    // aht.getEvent(&humidity, &temp); // AHT21から湿度と温度の取得
+    // float temperature1 = temp.temperature;
+    // uint8_t relative_humidity = humidity.relative_humidity;
 
-    // 気圧を取得
-    bmp.takeForcedMeasurement();
-    float temperature2 = bmp.readTemperature();
-    float pressure = bmp.readPressure() / 100.0F;
+    // // 気圧を取得
+    // bmp.takeForcedMeasurement();
+    // float temperature2 = bmp.readTemperature();
+    // float pressure = bmp.readPressure() / 100.0F;
 
-    float temperature = (temperature1 + temperature2) / 2.0F;
+    // float temperature = (temperature1 + temperature2) / 2.0F;
 
     sprite.fillScreen(TFT_BLACK);
     sprite.setTextColor(TFT_WHITE); // 文字色を設定
     sprite.drawString("brightness", 0, 0);
     sprite.drawNumber(brightness, 70, 0); // 明るさを表示
-    sprite.drawNumber((int)temperature1, 0, 8); // 温度を表示
-    sprite.drawNumber((int)temperature2, 20, 8); // 温度を表示
-    sprite.drawNumber((int)relative_humidity, 40, 8); // 湿度を表示
-    sprite.drawNumber(pressure, 60, 8); // 気圧を表示
+    // sprite.drawNumber((int)temperature1, 0, 8); // 温度を表示
+    // sprite.drawNumber((int)temperature2, 20, 8); // 温度を表示
+    // sprite.drawNumber((int)relative_humidity, 40, 8); // 湿度を表示
+    // sprite.drawNumber(pressure, 60, 8); // 気圧を表示
 
 
-    display.startWrite(); // 描画を開始
-    sprite.pushSprite(30, 50);
-    display.endWrite(); // 描画を終了
+    // display.startWrite(); // 描画を開始
+    // sprite.pushSprite(30, 50);
+    // display.endWrite(); // 描画を終了
+
+    
+    int32_t x, y;
+    static uint32_t prev = 0;
+    if (display.getTouch(&x, &y) && (millis() - prev) > 500) {
+        switch (current_screen) {
+            case Screen::HOME:
+                if(icon_y < y){
+                    if( x < width/3 ){
+                        current_screen = Screen::LIGHT;
+                        draw_light_control(display);
+                    }else if( x < width*2/3 ){
+                        current_screen = Screen::AC;
+                        draw_airconditioner_control(display);
+                    }else{
+                        current_screen = Screen::CURTAIN;
+                        draw_curtain_control(display);
+                    }
+                }
+                break;
+            case Screen::LIGHT:
+            case Screen::AC:
+            case Screen::CURTAIN:
+                if(width-100 < x && height-100 < y){
+                    current_screen = Screen::HOME;
+                    draw_home_screen(display);
+                }
+                break;
+            default:
+                break;
+        }
+        prev = millis();
+    }
+
+    LGFX_Sprite light_control(&display);
+    switch (current_screen) {
+        case Screen::HOME:
+            
+            break;
+        case Screen::LIGHT:
+
+            break;
+        default:
+            break;
+    }
+
 }
