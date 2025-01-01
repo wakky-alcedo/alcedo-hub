@@ -26,3 +26,11 @@ def ButtonStopClicked(event_struct):
 def ButtonCloseClicked(event_struct):
     return
 
+
+def ButtonTempDownClicked(event_struct):
+    return
+
+
+def SliderOpenChanged(event_struct):
+    return
+

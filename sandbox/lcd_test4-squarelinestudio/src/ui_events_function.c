@@ -55,6 +55,20 @@ void ButtonTempDownClicked(lv_event_t * e)
     lv_label_set_text(lavel, buf);
 }
 
+void SliderOpenChanged(lv_event_t * e)
+{
+    // スライダーの値を取得し，明るさラベルを変更する
+    lv_obj_t * slider = lv_event_get_target(e);
+    int value = lv_slider_get_value(slider);
+
+    // ラベルオブジェクトを取得
+    lv_obj_t * label = ui_LabelOpenSlider; // Label1 を SquareLine Studio で設定した名前に置き換え
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d", value); // スライダーの値を文字列に変換
+
+    lv_label_set_text(label, buf); // ラベルのテキストを更新
+}
+
 void ButtonOpenClicked(lv_event_t * e)
 {
 	// Your code here

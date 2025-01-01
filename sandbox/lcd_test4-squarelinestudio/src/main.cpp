@@ -110,9 +110,18 @@ void setup()
     lv_obj_set_style_text_font(ui_LabelHome1, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text( ui_LabelHome1, LV_SYMBOL_NEW_LINE);
     // A/C
+    lv_obj_set_style_text_font(ui_LabelHome2, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text( ui_LabelHome2, LV_SYMBOL_NEW_LINE);
     lv_label_set_text( ui_LabelTempUp, LV_SYMBOL_UP);
     lv_label_set_text( ui_LabelTempDown, LV_SYMBOL_DOWN);
+    lv_obj_set_style_text_font(ui_LabelACOn, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text( ui_LabelACOn, LV_SYMBOL_POWER);
+    lv_obj_set_style_text_font(ui_LabelACOff, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+    // lv_label_set_text( ui_LabelACOff, LV_SYMBOL_CLOSE);
+    lv_label_set_text( ui_LabelACOff, "OFF");
     // Curtain
+    lv_obj_set_style_text_font(ui_LabelHome3, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text( ui_LabelHome3, LV_SYMBOL_NEW_LINE);
     lv_obj_set_style_text_font(ui_LabelOpen, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text( ui_LabelOpen, LV_SYMBOL_LEFT LV_SYMBOL_RIGHT);
     lv_obj_set_style_text_font(ui_LabelStop, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);

@@ -70,8 +70,6 @@ extern lv_obj_t * uic_aa;
 // SCREEN: ui_Screen3
 void ui_Screen3_screen_init(void);
 extern lv_obj_t * ui_Screen3;
-void ui_event_ButtonHome2(lv_event_t * e);
-extern lv_obj_t * ui_ButtonHome2;
 extern lv_obj_t * ui_Dropdown1;
 extern lv_obj_t * ui_Button4;
 extern lv_obj_t * ui_Panel2;
@@ -83,19 +81,22 @@ void ui_event_ButtonTempDown(lv_event_t * e);
 extern lv_obj_t * ui_ButtonTempDown;
 extern lv_obj_t * ui_LabelTempDown;
 extern lv_obj_t * ui_ButtonACOn;
+extern lv_obj_t * ui_LabelACOn;
 extern lv_obj_t * ui_ButtonACOff;
+extern lv_obj_t * ui_LabelACOff;
 extern lv_obj_t * ui_Label4;
+void ui_event_ButtonHome2(lv_event_t * e);
+extern lv_obj_t * ui_ButtonHome2;
+extern lv_obj_t * ui_LabelHome2;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_Screen4
 void ui_Screen4_screen_init(void);
 extern lv_obj_t * ui_Screen4;
-void ui_event_ButtonHome3(lv_event_t * e);
-extern lv_obj_t * ui_ButtonHome3;
 extern lv_obj_t * ui_Container4;
-void ui_event_SliderBrightness2(lv_event_t * e);
-extern lv_obj_t * ui_SliderBrightness2;
-extern lv_obj_t * ui_LabelBrightness2;
+void ui_event_SliderOpen(lv_event_t * e);
+extern lv_obj_t * ui_SliderOpen;
+extern lv_obj_t * ui_LabelOpenSlider;
 extern lv_obj_t * ui_Container6;
 void ui_event_ButtonOpen(lv_event_t * e);
 extern lv_obj_t * ui_ButtonOpen;
@@ -107,6 +108,9 @@ void ui_event_ButtonClose(lv_event_t * e);
 extern lv_obj_t * ui_ButtonClose;
 extern lv_obj_t * ui_LabelClose;
 extern lv_obj_t * ui_Label7;
+void ui_event_ButtonHome3(lv_event_t * e);
+extern lv_obj_t * ui_ButtonHome3;
+extern lv_obj_t * ui_LabelHome3;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_Screen5
@@ -118,6 +122,12 @@ extern lv_obj_t * ui_SpinboxTemp2;
 // EVENTS
 
 extern lv_obj_t * ui____initial_actions0;
+
+// IMAGES AND IMAGE SETS
+LV_IMG_DECLARE(ui_img_lamp_png);    // assets/lamp.png
+LV_IMG_DECLARE(ui_img_1485690870);    // assets/air-conditioner (3)80.png
+LV_IMG_DECLARE(ui_img_curtains_png);    // assets/curtains.png
+LV_IMG_DECLARE(ui_img_792168841);    // assets/air-conditioner (3)100.png
 
 // UI INIT
 void ui_init(void);

@@ -15,6 +15,7 @@ void SliderBrightnessChanged(lv_event_t * e);
 void SliderColorChanged(lv_event_t * e);
 void ButtonTempUpClicked(lv_event_t * e);
 void ButtonTempDownClicked(lv_event_t * e);
+void SliderOpenChanged(lv_event_t * e);
 void ButtonOpenClicked(lv_event_t * e);
 void ButtonStopClicked(lv_event_t * e);
 void ButtonCloseClicked(lv_event_t * e);
