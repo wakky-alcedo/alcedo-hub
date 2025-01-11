@@ -35,7 +35,7 @@ float temperature_AHT20;
 float humidity;
 bool sensor_started = false;
 bool sensor_busy = false;
-unsigned long measurementDelayAHT20 = 0;
+unsigned long measurementDelayAHT20 = 0; // Time when the measurement was started
 /*******************************/
 
 float delta = 0;
@@ -135,22 +135,22 @@ void startMeasurementAHT20() {
 }
 
 void checkbusyAHT20() {
-    if (millis() < measurementDelayAHT20) {
+    if (millis() < measurementDelayAHT20) { // millis() overflow
         measurementDelayAHT20 = millis();
     }
 
-    if (sensor_started && sensor_busy && ((millis() - measurementDelayAHT20 >= 200))) {
+    if (sensor_started && sensor_busy && ((millis() - measurementDelayAHT20 >= 200))) { // 200ms timeout
         sensor_started = false;
         sensor_busy = false;
     }
 
-    if (sensor_started && sensor_busy && ((millis() - measurementDelayAHT20 >= 80))) {
-        Wire.requestFrom(0x38, 1);
-        if (Wire.available()) {
-        unsigned char c = Wire.read();
-        if (!(c & 0x80)) {
-            sensor_busy = false;
-        }
+    if (sensor_started && sensor_busy && ((millis() - measurementDelayAHT20 >= 80))) { // 80ms timeout
+        Wire.requestFrom(0x38, 1); // Request 1 byte of data
+        if (Wire.available()) {   // Read the data
+            unsigned char c = Wire.read(); // Receive a byte as character
+            if (!(c & 0x80)) {
+                sensor_busy = false;
+            }
         }
     }
 }
