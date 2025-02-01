@@ -3,6 +3,7 @@
 #include <IRremoteESP8266.h>
 #include <ir_Panasonic.h>
 #include <IRsend.h>
+#include "IrSendLight.hpp"
 
 #define ENABLE_LIGHT 1
 #define ENABLE_AC 0
@@ -15,6 +16,9 @@ constexpr uint8_t USER_LERN_PIN = 2;
 IRPanasonicAc pana(IR_SEND_PIN); //make an instance.
 
 IRsend irsend=IRsend(IR_SEND_PIN);  // Set the GPIO to be used.
+
+IrSendLight irsendLight(IR_SEND_PIN);
+
 uint16_t rawData[35] = {  7000,4760,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,560,280,1400,280,1400,280,1400,280,1400,280
 };
 
@@ -28,34 +32,31 @@ void setup() {
     pinMode(IR_RECV_PIN, INPUT);
 
     pana.begin();
-
     irsend.begin();
+    irsendLight.begin();
+
 }
 
 void loop() {
 #if ENABLE_LIGHT
-    // Light ON
-    // IrSender.sendNEC(0x20DF10EF, 32);
-    // irsend.sendNEC( )
-    #define KASEIKYO_UNIT               432 // 16 pulses of 37 kHz (432,432432)  - Pronto 0x70 | 0x10
-    #define KASEIKYO_HEADER_MARK        (8 * KASEIKYO_UNIT) // 3456
-    #define KASEIKYO_HEADER_SPACE       (4 * KASEIKYO_UNIT) // 1728
-    #define KASEIKYO_BIT_MARK           KASEIKYO_UNIT
-    #define KASEIKYO_ONE_SPACE          (3 * KASEIKYO_UNIT) // 1296
-    #define KASEIKYO_ZERO_SPACE         KASEIKYO_UNIT
-    // 全灯
-    // uint64_t tRawData[]={0x2FF00AF50301001, 0x3DC2FD}; // 0b0000001011111111000000001010111101010000001100000001000000000001  0b001111011100001011111101
-    // お好み
-    uint64_t tRawData[]={0x4FF00AF50301001, 0x3DC2FB};
-    // 消灯
-    // uint64_t tRawData[]={0x3FF00AF50301001, 0x3DC2FC}; // 0b0000001111111111000000001010111101010000001100000001000000000001  0b001111011100001011111100
-    for (uint8_t i = 0; i < 3; i++) {
-        irsend.sendGeneric(KASEIKYO_HEADER_MARK, KASEIKYO_HEADER_SPACE,
-                            KASEIKYO_BIT_MARK, KASEIKYO_ONE_SPACE,
-                            KASEIKYO_BIT_MARK, KASEIKYO_ZERO_SPACE,
-                            KASEIKYO_BIT_MARK, 0, (uint8_t*)tRawData, 88/8, 38, false, 0, 50); // dataの順番が違う可能性？
-        delay(30);
+    // irsendLight.send(LightCmmand::On);
+    // delay(2000);
+    // irsendLight.send(LightCmmand::Favarite);
+    // delay(2000);
+    // irsendLight.send(LightCmmand::Off);
+    // delay(2000);
+
+    static uint8_t data = 0x20;
+    Serial.println(data, HEX);
+    irsendLight.send(data);
+    data++;
+    while(data == 0x02 || data == 0x03 || data == 0x04 || data == 0x06 || data == 0x07 || data == 0x09 || data == 0x0F || data == 0x0E) {
+        data++;
+    };
+    if (data > 0x30) {
+        data = 0x20;
     }
+    delay(2000);
 
 #endif
 
@@ -118,5 +119,5 @@ void loop() {
 
 #endif
 
-    delay(2000); // 5秒ごとに送信
+    // delay(2000); // 5秒ごとに送信
 }
