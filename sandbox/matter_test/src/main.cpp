@@ -49,14 +49,12 @@
 #include <app/server/OnboardingCodesUtil.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include "matter_func.hpp"
-#include <display/display.hpp>
-
 
 // PINを設定してください
-// const int LED_PIN_1 = 2;
-// const int LED_PIN_2 = 4;
-// const int TOGGLE_BUTTON_PIN_1 = 0;
-// const int TOGGLE_BUTTON_PIN_2 = 15;
+const int LED_PIN_1 = 2;
+const int LED_PIN_2 = 4;
+const int TOGGLE_BUTTON_PIN_1 = 0;
+const int TOGGLE_BUTTON_PIN_2 = 15;
 // constexpr uint8_t IR_SEND_PIN = 32;
 // constexpr uint8_t IR_RECV_PIN = 33;
 
@@ -67,19 +65,20 @@ int last_toggle;
 
 void setup() {
     Serial.begin(115200);
-    // pinMode(LED_PIN_1, OUTPUT);
-    // pinMode(LED_PIN_2, OUTPUT);
-    // pinMode(TOGGLE_BUTTON_PIN_1, INPUT);
-    // pinMode(TOGGLE_BUTTON_PIN_2, INPUT);
-    // pinMode(IR_SEND_PIN, OUTPUT);
+    pinMode(LED_PIN_1, OUTPUT);
+    pinMode(LED_PIN_2, OUTPUT);
+    pinMode(TOGGLE_BUTTON_PIN_1, INPUT);
+    pinMode(TOGGLE_BUTTON_PIN_2, INPUT);
+    pinMode(IR_SEND_PIN, OUTPUT);
 
+
+    
     setup_matter(); // Matterデバイスのセットアップ
-
-    display_setup();
+    // irSend.begin();
+    ir_send_light.begin();
 }
 
 
 void loop() {
     loop_matter();
-    display_loop();
 }
