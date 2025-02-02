@@ -2,7 +2,12 @@
 #ifndef DISPLAY_HPP_
 #define DISPLAY_HPP_
 
-#define SCR 8
+CST820 touch(I2C_SDA, I2C_SCL, -1, -1); /* 触摸实例 */
+
+static lv_disp_draw_buf_t draw_buf;
+static lv_color_t buf[ screenWidth * screenHeight / 10 ];
+
+
 class LGFX : public lgfx::LGFX_Device
 {
     lgfx::Panel_ST7789  _panel_instance;    // ST7789UI
@@ -59,5 +64,46 @@ public:
         setPanel(&_panel_instance);
     }
 };
+
+LGFX tft;
+
+/* Display flushing */
+void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p )
+{
+    uint32_t w = ( area->x2 - area->x1 + 1 );
+    uint32_t h = ( area->y2 - area->y1 + 1 );
+
+    tft.startWrite();
+    tft.setAddrWindow( area->x1, area->y1, w, h );
+    // tft.pushColors( ( uint16_t * )&color_p->full, w * h, true );
+    tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h );
+    tft.endWrite();
+
+    lv_disp_flush_ready( disp );
+}
+
+
+/*Read the touchpad*/
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
+{
+    bool touched;
+    uint8_t gesture;
+    uint16_t touchX, touchY;
+
+    touched = touch.getTouch(&touchX, &touchY, &gesture);
+
+    if (!touched)
+    {
+        data->state = LV_INDEV_STATE_REL;
+    }
+    else
+    {
+        data->state = LV_INDEV_STATE_PR;
+
+        /*Set the coordinates*/
+        data->point.x = touchY;
+        data->point.y = screenHeight-touchX;
+    }
+}
 
 #endif // DISPLAY_HPP_
