@@ -1,12 +1,8 @@
 #ifndef MATTER_ON_UPDATE_HPP_
 #define MATTER_ON_UPDATE_HPP_
 
-#include "IrSendLight.hpp"
-#include "IrSendAC.hpp"
 constexpr uint8_t IR_SEND_PIN = 32;
 constexpr uint8_t IR_RECV_PIN = 33;
-
-IrSendLight ir_send_light(IR_SEND_PIN);
 
 namespace ac {
 // enum class Attributes : uint8_t {
@@ -43,11 +39,9 @@ void on_ac_system_mode_update(ac::SystemMode system_mode) {
 void on_light_onoff_update(light::OnOff state) {
     switch (state) {
     case light::OnOff::Off:
-        ir_send_light.send(LightCmmand::Off);
         Serial.printf("Light Off\n");
         break;
     case light::OnOff::On:
-        ir_send_light.send(LightCmmand::On);
         Serial.printf("Light On\n");
         break;
     }
