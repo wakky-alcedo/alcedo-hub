@@ -1,10 +1,22 @@
 #include <lvgl.h>
 #include <ui/ui.h>
 #include <stdio.h>
+// #include "ir_dif.cpp"
+// #include "IrSendLight.hpp"
 
-void SwitchLightClicked(lv_event_t * e) {
+/* Light */
 
-}
+// void SwitchLightClicked(lv_event_t * e) {
+//     // // スイッチの状態を取得し，ラベルを変更する
+//     lv_obj_t * sw = lv_event_get_target(e);
+//     bool state = lv_obj_has_state(sw, LV_STATE_CHECKED);
+
+//     if (state) {
+//         // irsendLight.send(LightCmmand::On);
+//     } else {
+//         // irsendLight.send(LightCmmand::Off);
+//     }
+// }
 
 void SliderBrightnessChanged(lv_event_t * e) {
     // スライダーの値を取得し，明るさラベルを変更する
@@ -33,6 +45,8 @@ void SliderColorChanged(lv_event_t * e)
     lv_label_set_text(label, buf); // ラベルのテキストを更新
 }
 
+/* Aircon */
+
 void ButtonTempUpClicked(lv_event_t * e)
 {
 	// ui_LabelTemp の値を取得し，1増やして設定する
@@ -54,6 +68,8 @@ void ButtonTempDownClicked(lv_event_t * e)
     snprintf(buf, sizeof(buf), "%d", value);
     lv_label_set_text(lavel, buf);
 }
+
+/* Curtain */
 
 void SliderOpenChanged(lv_event_t * e)
 {
