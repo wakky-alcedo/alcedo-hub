@@ -55,8 +55,6 @@ const int LED_PIN_1 = 2;
 const int LED_PIN_2 = 4;
 const int TOGGLE_BUTTON_PIN_1 = 0;
 const int TOGGLE_BUTTON_PIN_2 = 15;
-// constexpr uint8_t IR_SEND_PIN = 32;
-// constexpr uint8_t IR_RECV_PIN = 33;
 
 // トグルボタンのデバウンス
 const int DEBOUNCE_DELAY = 500;
@@ -74,8 +72,6 @@ void setup() {
 
     
     setup_matter(); // Matterデバイスのセットアップ
-    // irSend.begin();
-    ir_send_light.begin();
 }
 
 
