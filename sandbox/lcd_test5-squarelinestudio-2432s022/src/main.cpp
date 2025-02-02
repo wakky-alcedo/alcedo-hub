@@ -3,17 +3,23 @@
 #include <LovyanGFX.hpp>
 #include <display.hpp>
 #include <ui/ui.h>
+#include "CST820.h"
+
 
 /*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
 
 /*Change to your screen resolution*/
 static const uint16_t screenWidth  = 320;
 static const uint16_t screenHeight = 240;
+constexpr uint16_t I2C_SDA = 21;
+constexpr uint16_t I2C_SCL = 22;
 
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[ screenWidth * screenHeight / 10 ];
 
 LGFX tft;
+
+CST820 touch(I2C_SDA, I2C_SCL, -1, -1); /* 触摸实例 */
 
 #if LV_USE_LOG != 0
 /* Serial debugging */
@@ -40,13 +46,15 @@ void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
 }
 
 /*Read the touchpad*/
-void my_touchpad_read( lv_indev_drv_t * indev_driver, lv_indev_data_t * data )
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 {
-    uint16_t touchX = 0, touchY = 0;
+    bool touched;
+    uint8_t gesture;
+    uint16_t touchX, touchY;
 
-    bool touched = tft.getTouch( &touchX, &touchY);
+    touched = touch.getTouch(&touchX, &touchY, &gesture);
 
-    if( !touched )
+    if (!touched)
     {
         data->state = LV_INDEV_STATE_REL;
     }
@@ -55,20 +63,16 @@ void my_touchpad_read( lv_indev_drv_t * indev_driver, lv_indev_data_t * data )
         data->state = LV_INDEV_STATE_PR;
 
         /*Set the coordinates*/
-        data->point.x = touchX;
-        data->point.y = touchY;
-
-        Serial.print( "Data x " );
-        Serial.println( touchX );
-
-        Serial.print( "Data y " );
-        Serial.println( touchY );
+        data->point.x = touchY;
+        data->point.y = screenHeight-touchX;
     }
 }
 
 void setup()
 {
     Serial.begin( 115200 ); /* prepare for possible serial debug */
+
+    touch.begin(); /*初始化触摸板*/
 
     String LVGL_Arduino = "Hello Arduino! ";
     LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
