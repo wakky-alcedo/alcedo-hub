@@ -9,6 +9,7 @@
 #include "Matter.h"
 #include <app/server/OnboardingCodesUtil.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
+#include "matter_on_update.hpp"
 using namespace chip;
 namespace clusters = chip::app::Clusters;
 using namespace esp_matter;
@@ -102,6 +103,7 @@ static esp_err_t on_attribute_update(attribute::callback_type_t type,
         if (endpoint_id == ac_endpoint_id && cluster_id == CLUSTER_ID_AC) {
             if (attribute_id == clusters::Thermostat::Attributes::SystemMode::Id) {
                 systemMode = val->val.u8;
+                on_ac_system_mode_update((ac::SystemMode)systemMode);
                 Serial.printf("SystemMode: %d\n", systemMode);
             } else if (attribute_id == clusters::Thermostat::Attributes::OccupiedCoolingSetpoint::Id) {
                 occupiedCoolingSetpoint = val->val.i16;
@@ -113,6 +115,7 @@ static esp_err_t on_attribute_update(attribute::callback_type_t type,
         } else if (endpoint_id == light_endpoint_id) {
             if (cluster_id == CLUSTER_ID_ONOFF && attribute_id == clusters::OnOff::Attributes::OnOff::Id) {
                 uint8_t new_state = val->val.u8;
+                on_light_onoff_update((light::OnOff)new_state);
                 Serial.printf("Light: %d\n", new_state);
             } else if (cluster_id == CLUSTER_ID_LEVEL && attribute_id == clusters::LevelControl::Attributes::CurrentLevel::Id) {
                 uint8_t new_level = val->val.u8;
@@ -228,11 +231,12 @@ void setup_matter() {
     cluster::thermostat::feature::heating::add(therm_cluster, &heating_config);
 
     // set heating step size
-    // matterValue = esp_matter_int16(10);  //10C 
-    // attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::SetpointChangeAmount::Id, &matterValue);
+    matterValue = esp_matter_int16(10);  //10C 
+    attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::SetpointChangeAmount::Id, &matterValue);
     // set local temperature
     // matterValue = esp_matter_float(2500);  //25C
     // attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::LocalTemperature::Id, &matterValue);
+    // attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::SetpointChangeAmount::Id, 10);
 
     // 照明
     color_temperature_light::config_t light_config;
@@ -280,6 +284,16 @@ void setup_matter() {
     chip::Logging::SetLogFilter(chip::Logging::LogCategory::kLogCategory_Error);
 
 
+    // matterValue = esp_matter_int16(10);  //10C 
+    esp_matter_attr_val_t setpoint_change_amount = esp_matter_invalid(NULL);
+    attribute_t * attribute = attribute::get(cluster::get(endpoint_ac, CLUSTER_ID_AC), clusters::Thermostat::Attributes::SetpointChangeAmount::Id);
+    attribute::get_val(attribute, &setpoint_change_amount);
+    Serial.printf("SetpointChangeAmount: %d\n", setpoint_change_amount.val.i16);
+    setpoint_change_amount = esp_matter_float(100);  //1C
+    Serial.printf("SetpointChangeAmount: %d\n", setpoint_change_amount.val.i16);
+    attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::SetpointChangeAmount::Id, &setpoint_change_amount);
+
+
     Serial.println("Matter device setup complete");
 }
 
@@ -287,11 +301,11 @@ void setup_matter() {
 
 
 // プラグインユニットのオン/オフ属性値を読み取ります
-esp_matter_attr_val_t get_onoff_attribute_value(esp_matter::attribute_t *attribute_ref) {
-    esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
-    attribute::get_val(attribute_ref, &onoff_value);
-    return onoff_value;
-}
+// esp_matter_attr_val_t get_onoff_attribute_value(esp_matter::attribute_t *attribute_) {
+//     esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
+//     attribute::get_val(attribute_ref, &onoff_value);
+//     return onoff_value;
+// }
 
 // プラグインユニットのオン/オフ属性値を設定します
 void set_onoff_attribute_value(esp_matter_attr_val_t *onoff_value, uint16_t plugin_unit_endpoint_id) {
