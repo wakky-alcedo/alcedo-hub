@@ -1,6 +1,14 @@
 #include <LovyanGFX.hpp>
+#include <lvgl.h>
+#include "CST820.h"
+#include <ui/ui.h>
 #ifndef DISPLAY_HPP_
 #define DISPLAY_HPP_
+
+constexpr uint16_t screenWidth  = 320;
+constexpr uint16_t screenHeight = 240;
+constexpr uint16_t I2C_SDA = 21;
+constexpr uint16_t I2C_SCL = 22;
 
 CST820 touch(I2C_SDA, I2C_SCL, -1, -1); /* 触摸实例 */
 
