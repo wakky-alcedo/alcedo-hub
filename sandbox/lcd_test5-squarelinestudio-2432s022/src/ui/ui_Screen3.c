@@ -10,16 +10,16 @@ void ui_Screen3_screen_init(void)
     ui_Screen3 = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_Screen3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Dropdown1 = lv_dropdown_create(ui_Screen3);
-    lv_dropdown_set_options(ui_Dropdown1, "Auto\nCooling\nHeating\nDry");
-    lv_obj_set_width(ui_Dropdown1, 155);
-    lv_obj_set_height(ui_Dropdown1, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Dropdown1, 48);
-    lv_obj_set_y(ui_Dropdown1, -19);
-    lv_obj_set_align(ui_Dropdown1, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Dropdown1, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_set_style_text_align(ui_Dropdown1, LV_TEXT_ALIGN_AUTO, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Dropdown1, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_DropdownACMode = lv_dropdown_create(ui_Screen3);
+    lv_dropdown_set_options(ui_DropdownACMode, "Auto\nCooling\nHeating\nDry");
+    lv_obj_set_width(ui_DropdownACMode, 155);
+    lv_obj_set_height(ui_DropdownACMode, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_DropdownACMode, 48);
+    lv_obj_set_y(ui_DropdownACMode, -19);
+    lv_obj_set_align(ui_DropdownACMode, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_DropdownACMode, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_style_text_align(ui_DropdownACMode, LV_TEXT_ALIGN_AUTO, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_DropdownACMode, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -134,8 +134,11 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_y(ui_LabelHome2, 1);
     lv_obj_set_align(ui_LabelHome2, LV_ALIGN_CENTER);
 
+    lv_obj_add_event_cb(ui_DropdownACMode, ui_event_DropdownACMode, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonTempUp, ui_event_ButtonTempUp, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonTempDown, ui_event_ButtonTempDown, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_ButtonACOn, ui_event_ButtonACOn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_ButtonACOff, ui_event_ButtonACOff, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonHome2, ui_event_ButtonHome2, LV_EVENT_ALL, NULL);
 
 }

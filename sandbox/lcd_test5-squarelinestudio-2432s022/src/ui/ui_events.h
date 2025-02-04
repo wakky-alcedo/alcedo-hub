@@ -13,8 +13,11 @@ extern "C" {
 void SwitchLightClicked(lv_event_t * e);
 void SliderBrightnessChanged(lv_event_t * e);
 void SliderColorChanged(lv_event_t * e);
+void DropdownACModeChanged(lv_event_t * e);
 void ButtonTempUpClicked(lv_event_t * e);
 void ButtonTempDownClicked(lv_event_t * e);
+void ButtonACOnClickerd(lv_event_t * e);
+void ButtonACOffClicked(lv_event_t * e);
 void SliderOpenChanged(lv_event_t * e);
 void ButtonOpenClicked(lv_event_t * e);
 void ButtonStopClicked(lv_event_t * e);

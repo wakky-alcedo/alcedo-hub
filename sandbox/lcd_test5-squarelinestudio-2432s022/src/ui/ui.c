@@ -56,7 +56,8 @@ lv_obj_t * uic_aa;
 // SCREEN: ui_Screen3
 void ui_Screen3_screen_init(void);
 lv_obj_t * ui_Screen3;
-lv_obj_t * ui_Dropdown1;
+void ui_event_DropdownACMode(lv_event_t * e);
+lv_obj_t * ui_DropdownACMode;
 lv_obj_t * ui_Button4;
 lv_obj_t * ui_Panel2;
 lv_obj_t * ui_LabelTemp;
@@ -66,8 +67,10 @@ lv_obj_t * ui_LabelTempUp;
 void ui_event_ButtonTempDown(lv_event_t * e);
 lv_obj_t * ui_ButtonTempDown;
 lv_obj_t * ui_LabelTempDown;
+void ui_event_ButtonACOn(lv_event_t * e);
 lv_obj_t * ui_ButtonACOn;
 lv_obj_t * ui_LabelACOn;
+void ui_event_ButtonACOff(lv_event_t * e);
 lv_obj_t * ui_ButtonACOff;
 lv_obj_t * ui_LabelACOff;
 lv_obj_t * ui_Label4;
@@ -187,6 +190,15 @@ void ui_event_SliderColor(lv_event_t * e)
     }
 }
 
+void ui_event_DropdownACMode(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        DropdownACModeChanged(e);
+    }
+}
+
 void ui_event_ButtonTempUp(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -202,6 +214,24 @@ void ui_event_ButtonTempDown(lv_event_t * e)
 
     if(event_code == LV_EVENT_CLICKED) {
         ButtonTempDownClicked(e);
+    }
+}
+
+void ui_event_ButtonACOn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        ButtonACOnClickerd(e);
+    }
+}
+
+void ui_event_ButtonACOff(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        ButtonACOffClicked(e);
     }
 }
 

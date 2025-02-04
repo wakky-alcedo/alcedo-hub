@@ -34,3 +34,15 @@ def ButtonTempDownClicked(event_struct):
 def SliderOpenChanged(event_struct):
     return
 
+
+def DropdownACModeChanged(event_struct):
+    return
+
+
+def ButtonACOnClickerd(event_struct):
+    return
+
+
+def ButtonACOffClicked(event_struct):
+    return
+
