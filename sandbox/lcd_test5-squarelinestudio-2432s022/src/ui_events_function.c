@@ -47,27 +47,27 @@ void SliderColorChanged(lv_event_t * e)
 
 /* Aircon */
 
-void ButtonTempUpClicked(lv_event_t * e)
-{
-	// ui_LabelTemp の値を取得し，1増やして設定する
-    lv_obj_t * lavel = ui_LabelTemp;
-    int value = atoi(lv_label_get_text(lavel));
-    value++;
-    char buf[8];
-    snprintf(buf, sizeof(buf), "%d", value);
-    lv_label_set_text(lavel, buf);
-}
+// void ButtonTempUpClicked(lv_event_t * e)
+// {
+// 	// ui_LabelTemp の値を取得し，1増やして設定する
+//     lv_obj_t * lavel = ui_LabelTemp;
+//     int value = atoi(lv_label_get_text(lavel));
+//     value++;
+//     char buf[8];
+//     snprintf(buf, sizeof(buf), "%d", value);
+//     lv_label_set_text(lavel, buf);
+// }
 
-void ButtonTempDownClicked(lv_event_t * e)
-{
-	// ui_LabelTemp の値を取得し，1減らして設定する
-    lv_obj_t * lavel = ui_LabelTemp;
-    int value = atoi(lv_label_get_text(lavel));
-    value--;
-    char buf[8];
-    snprintf(buf, sizeof(buf), "%d", value);
-    lv_label_set_text(lavel, buf);
-}
+// void ButtonTempDownClicked(lv_event_t * e)
+// {
+// 	// ui_LabelTemp の値を取得し，1減らして設定する
+//     lv_obj_t * lavel = ui_LabelTemp;
+//     int value = atoi(lv_label_get_text(lavel));
+//     value--;
+//     char buf[8];
+//     snprintf(buf, sizeof(buf), "%d", value);
+//     lv_label_set_text(lavel, buf);
+// }
 
 /* Curtain */
 

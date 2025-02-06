@@ -122,6 +122,7 @@ void display_setup()
     String LVGL_Arduino = "Hello Arduino! ";
     LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
 
+    Serial.begin( 115200 ); /* prepare for possible serial debug */
     Serial.println( LVGL_Arduino );
     Serial.println( "I am LVGL_Arduino" );
 
@@ -173,6 +174,9 @@ void display_setup()
     lv_label_set_text( ui_LabelStop, LV_SYMBOL_PAUSE);
     lv_obj_set_style_text_font(ui_LabelClose, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text( ui_LabelClose, LV_SYMBOL_RIGHT LV_SYMBOL_LEFT);
+
+    Serial.end();
+    Serial.begin( 115200 ); /* prepare for possible serial debug */
 }
 
 /*Display loop*/
