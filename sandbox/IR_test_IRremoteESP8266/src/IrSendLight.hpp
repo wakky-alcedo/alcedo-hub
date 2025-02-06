@@ -5,7 +5,7 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
-enum class LightCmmand : uint8_t {
+enum class LightCommand : uint8_t {
     On = 0x02,
     Off = 0x03,
     Favarite = 0x04,
@@ -19,16 +19,18 @@ enum class LightCmmand : uint8_t {
 class IrSendLight {
 private:
     IRsend irsend = IRsend(0);
+    uint16_t IRsendPin;
 public:
     IrSendLight(uint16_t IRsendPin);
     ~IrSendLight();
     void begin();
     void send_raw(uint8_t* raw_data);
-    void send(uint8_t data);
-    void send(LightCmmand command);
+    void send(uint8_t data, uint8_t number_of_times = 3);
+    void send(LightCommand command, uint8_t number_of_times = 3);
 };
 
-IrSendLight::IrSendLight(uint16_t IRsendPin) {
+IrSendLight::IrSendLight(uint16_t IRsendPin)
+        : IRsendPin(IRsendPin) {
     irsend = IRsend(IRsendPin);  // Set the GPIO to be used.
 }
 
@@ -36,6 +38,7 @@ IrSendLight::~IrSendLight() {
 }
 
 void IrSendLight::begin() {
+    pinMode(IRsendPin, OUTPUT);
     irsend.begin();
 }
 
@@ -50,22 +53,22 @@ void IrSendLight::send_raw(uint8_t* raw_data) {
     constexpr uint16_t KASEIKYO_ZERO_SPACE         = KASEIKYO_UNIT; // 432
 
     // 送信する信号のデータ
-    for (uint8_t i = 0; i < 3; i++) {
-        irsend.sendGeneric(KASEIKYO_HEADER_MARK, KASEIKYO_HEADER_SPACE,
-                            KASEIKYO_BIT_MARK, KASEIKYO_ONE_SPACE,
-                            KASEIKYO_BIT_MARK, KASEIKYO_ZERO_SPACE,
-                            KASEIKYO_BIT_MARK, 0, (uint8_t*)raw_data, 88/8, 38, false, 0, 50); // dataの順番が違う可能性？
+    irsend.sendGeneric(KASEIKYO_HEADER_MARK, KASEIKYO_HEADER_SPACE,
+                        KASEIKYO_BIT_MARK, KASEIKYO_ONE_SPACE,
+                        KASEIKYO_BIT_MARK, KASEIKYO_ZERO_SPACE,
+                        KASEIKYO_BIT_MARK, 0, (uint8_t*)raw_data, 88/8, 38, false, 0, 50); // dataの順番が違う可能性？
+}
+
+void IrSendLight::send(uint8_t data, uint8_t number_of_times) {
+    uint8_t tRawData[11] = {0x01, 0x10, 0x30, 0x50, 0xAF, 0x00, 0xFF, data, ~data, 0xC2, 0x3D};
+    for (uint8_t i = 0; i < number_of_times; i++) {
+        send_raw((uint8_t*)tRawData);
         delay(30);
     }
 }
 
-void IrSendLight::send(uint8_t data) {
-    uint8_t tRawData[11] = {0x01, 0x10, 0x30, 0x50, 0xAF, 0x00, 0xFF, data, ~data, 0xC2, 0x3D};
-    send_raw((uint8_t*)tRawData);
-}
-
-void IrSendLight::send(LightCmmand command) {
-    send((uint8_t)command);
+void IrSendLight::send(LightCommand command, uint8_t number_of_times) {
+    send((uint8_t)command, number_of_times);
 }
 
 #endif // IRSENDLIGHT_HPP_

@@ -4,59 +4,89 @@
 #include <ir_Panasonic.h>
 #include <IRsend.h>
 #include "IrSendLight.hpp"
+#include "IrSendAC.hpp"
 
-#define ENABLE_LIGHT 1
-#define ENABLE_AC 0
+#define ENABLE_LIGHT 0
+#define ENABLE_AC 1
 #define ENABLE_FAN 0
 
+// constexpr uint8_t IR_SEND_PIN = 1;
 constexpr uint8_t IR_SEND_PIN = 32;
-constexpr uint8_t IR_RECV_PIN = 33;
-constexpr uint8_t USER_LERN_PIN = 2;
+// constexpr uint8_t IR_RECV_PIN = 33;
+// constexpr uint8_t USER_LERN_PIN = 2;
 
 IRPanasonicAc pana(IR_SEND_PIN); //make an instance.
 
 IRsend irsend=IRsend(IR_SEND_PIN);  // Set the GPIO to be used.
 
 IrSendLight irsendLight(IR_SEND_PIN);
+IrSendAc irsendAc(IR_SEND_PIN);
 
-uint16_t rawData[35] = {  7000,4760,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,560,280,1400,280,1400,280,1400,280,1400,280
-};
+// uint16_t rawData[35] = {  7000,4760,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,1400,280,560,280,560,280,1400,280,1400,280,1400,280,1400,280};
 
 
 void setup() {
     Serial.begin(115200);  // シリアル通信の初期化
 
     // ピン設定
-    pinMode(USER_LERN_PIN, OUTPUT);
+    // pinMode(USER_LERN_PIN, OUTPUT);
     pinMode(IR_SEND_PIN, OUTPUT);
-    pinMode(IR_RECV_PIN, INPUT);
+    // pinMode(IR_RECV_PIN, INPUT);
 
     pana.begin();
     irsend.begin();
     irsendLight.begin();
 
+    irsendAc.setTemp(17);
+    irsendAc.setMode(AC_Mode::Heat);
 }
 
 void loop() {
 #if ENABLE_LIGHT
-    // irsendLight.send(LightCmmand::On);
+    // irsendLight.send(LightCommand::On);
     // delay(2000);
-    // irsendLight.send(LightCmmand::Favarite);
+    // irsendLight.send(LightCommand::Favarite);
     // delay(2000);
-    // irsendLight.send(LightCmmand::Off);
+    // irsendLight.send(LightCommand::Off);
     // delay(2000);
 
-    static uint8_t data = 0x20;
-    Serial.println(data, HEX);
-    irsendLight.send(data);
-    data++;
-    while(data == 0x02 || data == 0x03 || data == 0x04 || data == 0x06 || data == 0x07 || data == 0x09 || data == 0x0F || data == 0x0E) {
-        data++;
-    };
-    if (data > 0x30) {
-        data = 0x20;
-    }
-    delay(2000);
+    // static uint8_t data = 0x21;
+    // Serial.println(data, HEX);
+    // irsendLight.send(data);
+    // // if(data!=0x23 && data!=0x24){
+    //     data++;
+    // // }
+    // while(data == 0x02 || data == 0x03 || data == 0x04 || data == 0x06 || data == 0x07 || data == 0x09 || data == 0x0F || data == 0x0E) {
+    //     data++;
+    // };
+    // if (data > 0x30) {
+    //     data = 0x21;
+    // }
+    // delay(2000);
+
+    // irsendLight.send(LightCommand::On);
+    // delay(2000);
+    // irsendLight.send(LightCommand::BrightnessDown, 21);
+    // delay(3000);
+    // irsendLight.send(LightCommand::BrightnessUp, 21);
+    // delay(2000);
+
+    irsendLight.send(LightCommand::On);
+    delay(1000);
+    irsendLight.send(LightCommand::ColorTempDown, 12);
+    delay(1000);
+    irsendLight.send(LightCommand::ColorTempUp, 22);
+    delay(1000);
+
+    // irsendLight.send(LightCommand::ColorTempDown, 22);
+    // delay(1000);
+    // irsendLight.send(LightCommand::ColorTempUp, 12);
+
+    irsendLight.send(LightCommand::ColorTempDown, 12); // なんでや．．．
+
+    irsendLight.send(LightCommand::BrightnessUp, 9);
+    delay(3000);
+
 
 #endif
 
@@ -80,26 +110,36 @@ void loop() {
     // pana.on(); //power on the aircon.
     // pana.setTemp(16);
     // pana.setMode(kPanasonicAcHeat);
-    // pana.setFan(kPanasonicAcFanAuto);
-    // pana.setSwingVertical(kPanasonicAcSwingVAuto);
+    // // pana.setFan(kPanasonicAcFanAuto);
+    // // pana.setSwingVertical(kPanasonicAcSwingVAuto);
     // pana.send(); //send IR signal.
-    // digitalWrite(USER_LERN_PIN, HIGH);
+    // // digitalWrite(USER_LERN_PIN, HIGH);
     // delay(2000); //wait for a second.
 
-    pana.off(); //power off the aircon.
-    for (uint8_t i = 0; i < kPanasonicAcStateLength; i++) {
-      if (i%8 == 0) {Serial.print("0x"); };
-      char sendPacket[2] = "";
-      sprintf(sendPacket, "%02X", *(pana.getRaw()+i));
-      Serial.print(sendPacket);
-      if (i%8 == 7) {Serial.print(","); };
-    }
-    Serial.println("");
-    
-    // Serial.println(*pana.getRaw());
-    pana.send(); //send IR signal.
-    // digitalWrite(USER_LERN_PIN, LOW);
+    // pana.off(); //power off the aircon.
+    // // for (uint8_t i = 0; i < kPanasonicAcStateLength; i++) {
+    // //   if (i%8 == 0) {Serial.print("0x"); };
+    // //   char sendPacket[2] = "";
+    // //   sprintf(sendPacket, "%02X", *(pana.getRaw()+i));
+    // //   Serial.print(sendPacket);
+    // //   if (i%8 == 7) {Serial.print(","); };
+    // // }
+    // Serial.println("");
+    // // Serial.println(*pana.getRaw());
+    // pana.send(); //send IR signal.
+    // // digitalWrite(USER_LERN_PIN, LOW);
     // delay(2000); //wait for a second.
+
+
+    // クラス
+    irsendAc.setPower(true);
+    delay(2000);
+    irsendAc.setTemp(17);
+    delay(2000);
+    irsendAc.setMode(AC_Mode::Heat);
+    delay(2000);
+    irsendAc.setPower(false);
+    delay(2000);
 
 #endif
 
