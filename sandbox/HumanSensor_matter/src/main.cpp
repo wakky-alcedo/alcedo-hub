@@ -49,16 +49,16 @@
 #include <app/server/OnboardingCodesUtil.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include "matter_func.hpp"
+using namespace chip;
+using namespace chip::app::Clusters;
+using namespace esp_matter;
+using namespace esp_matter::endpoint;
 
 // PINを設定してください
-// const int LED_PIN_2 = 4;
-// const int TOGGLE_BUTTON_PIN_1 = 0;
-// const int TOGGLE_BUTTON_PIN_2 = 15;
-
-// トグルボタンのデバウンス
-const int DEBOUNCE_DELAY = 500;
-int last_toggle;
-
+const int LED_PIN_1 = D0;
+const int LED_PIN_2 = D1;
+const int TOGGLE_BUTTON_PIN_1 = D9;
+const int TOGGLE_BUTTON_PIN_2 = D8;
 
 void setup() {
     delay(5000);
@@ -67,11 +67,45 @@ void setup() {
     delay(1000);
     
     pinMode(HUMAN_SENSOR_PIN, INPUT);
-    
+      
+    pinMode(LED_PIN_1, OUTPUT);
+    pinMode(LED_PIN_2, OUTPUT);
+    pinMode(TOGGLE_BUTTON_PIN_1, INPUT);
+    pinMode(TOGGLE_BUTTON_PIN_2, INPUT);
+
     setup_matter(); // Matterデバイスのセットアップ
 }
 
+// // プラグインユニットのオン/オフ属性値を読み取ります
+// esp_matter_attr_val_t get_onoff_attribute_value(esp_matter::attribute_t *attribute_ref) {
+//   esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
+//   attribute::get_val(attribute_ref, &onoff_value);
+//   return onoff_value;
+// }
 
+// // プラグインユニットのオン/オフ属性値を設定します
+// void set_onoff_attribute_value(esp_matter_attr_val_t *onoff_value, uint16_t plugin_unit_endpoint_id) {
+//   attribute::update(plugin_unit_endpoint_id, CLUSTER_ID, ATTRIBUTE_ID, onoff_value);
+// }
+
+// トグルプラグインユニットボタンが押されたとき（デバウンス付き）、プラグインユニット属性値が変更されます
 void loop() {
     loop_matter();
+//   if ((millis() - last_toggle) > DEBOUNCE_DELAY) {
+//   if (!digitalRead(TOGGLE_BUTTON_PIN_1)) {
+//     last_toggle = millis();
+//     // 実際のオン/オフ値を読み取り、反転して設定
+//     esp_matter_attr_val_t onoff_value = get_onoff_attribute_value(attribute_ref_1);
+//     onoff_value.val.b = !onoff_value.val.b;
+//     set_onoff_attribute_value(&onoff_value, plugin_unit_endpoint_id_1);
+//   }
+
+//   if (!digitalRead(TOGGLE_BUTTON_PIN_2)) {
+//     last_toggle = millis();
+//     // 実際のオン/オフ値を読み取り、反転して設定
+//     esp_matter_attr_val_t onoff_value = get_onoff_attribute_value(attribute_ref_2);
+//     onoff_value.val.b = !onoff_value.val.b;
+//     set_onoff_attribute_value(&onoff_value, plugin_unit_endpoint_id_2);
+//   }
+//   }
 }
