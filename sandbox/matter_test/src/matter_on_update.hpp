@@ -1,8 +1,8 @@
 #ifndef MATTER_ON_UPDATE_HPP_
 #define MATTER_ON_UPDATE_HPP_
 
-constexpr uint8_t IR_SEND_PIN = 32;
-constexpr uint8_t IR_RECV_PIN = 33;
+// constexpr uint8_t IR_SEND_PIN = 32;
+// constexpr uint8_t IR_RECV_PIN = 33;
 
 namespace ac {
 // enum class Attributes : uint8_t {

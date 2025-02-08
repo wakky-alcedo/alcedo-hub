@@ -51,25 +51,26 @@
 #include "matter_func.hpp"
 
 // PINを設定してください
-const int LED_PIN_1 = 2;
-const int LED_PIN_2 = 4;
-const int TOGGLE_BUTTON_PIN_1 = 0;
-const int TOGGLE_BUTTON_PIN_2 = 15;
+// const int LED_PIN_1 = 2;
+// const int LED_PIN_2 = 4;
+// const int TOGGLE_BUTTON_PIN_1 = 0;
+// const int TOGGLE_BUTTON_PIN_2 = 15;
 
 // トグルボタンのデバウンス
 const int DEBOUNCE_DELAY = 500;
 int last_toggle;
 
-
 void setup() {
+    delay(5000);
     Serial.begin(115200);
-    pinMode(LED_PIN_1, OUTPUT);
-    pinMode(LED_PIN_2, OUTPUT);
-    pinMode(TOGGLE_BUTTON_PIN_1, INPUT);
-    pinMode(TOGGLE_BUTTON_PIN_2, INPUT);
-    pinMode(IR_SEND_PIN, OUTPUT);
+    Serial.flush();
+    delay(1000);
 
-
+    // pinMode(LED_PIN_1, OUTPUT);
+    // pinMode(LED_PIN_2, OUTPUT);
+    // pinMode(TOGGLE_BUTTON_PIN_1, INPUT);
+    // pinMode(TOGGLE_BUTTON_PIN_2, INPUT);
+    // pinMode(IR_SEND_PIN, OUTPUT);
     
     setup_matter(); // Matterデバイスのセットアップ
 }
