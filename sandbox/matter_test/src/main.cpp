@@ -49,12 +49,18 @@
 #include <app/server/OnboardingCodesUtil.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include "matter_func.hpp"
+#include "ClimateSensor.hpp"
+
 
 // PINを設定してください
 // const int LED_PIN_1 = 2;
 // const int LED_PIN_2 = 4;
 // const int TOGGLE_BUTTON_PIN_1 = 0;
 // const int TOGGLE_BUTTON_PIN_2 = 15;
+// constexpr uint8_t SPI_CS_PIN = 5;
+
+ClimateSensor sensor;
+ClimateData climate_data;
 
 // トグルボタンのデバウンス
 const int DEBOUNCE_DELAY = 500;
@@ -73,9 +79,13 @@ void setup() {
     // pinMode(IR_SEND_PIN, OUTPUT);
     
     setup_matter(); // Matterデバイスのセットアップ
+    
+    sensor.begin();
 }
 
 
 void loop() {
-    loop_matter();
+    sensor.read(climate_data);
+
+    loop_matter(climate_data);
 }

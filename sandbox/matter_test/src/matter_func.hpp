@@ -12,6 +12,7 @@
 #include <app/server/OnboardingCodesUtil.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include "matter_on_update.hpp"
+#include "ClimateSensor.hpp"
 using namespace chip;
 namespace clusters = chip::app::Clusters;
 using namespace esp_matter;
@@ -337,7 +338,7 @@ void set_onoff_attribute_value(esp_matter_attr_val_t *onoff_value, uint16_t plug
 //   attribute::update(plugin_unit_endpoint_id, CLUSTER_ID, ATTRIBUTE_ID, onoff_value);
 }
 
-void loop_matter() {
+void loop_matter(ClimateData &climate_data) {
     // トグルプラグインユニットボタンが押されたとき（デバウンス付き）、プラグインユニット属性値が変更されます
     // if ((millis() - last_toggle) > DEBOUNCE_DELAY) {
     //     if (!digitalRead(TOGGLE_BUTTON_PIN_1)) {
@@ -356,6 +357,24 @@ void loop_matter() {
     //         set_onoff_attribute_value(&onoff_value, plugin_unit_endpoint_id_2);
     //     }
     // }
+    static ClimateData last_climate_data;
+
+    if (last_climate_data.temperature != climate_data.temperature) {
+        matterValue = esp_matter_int16(climate_data.temperature*10);
+        attribute::update(temperature_sensor_endpoint_id, CLUSTER_ID_TEMP, ATTRIBUTE_ID_TEMP, &matterValue);
+        last_climate_data.temperature = climate_data.temperature;
+    }
+    if (last_climate_data.humidity != climate_data.humidity) {
+        matterValue = esp_matter_int16(climate_data.humidity*100);
+        attribute::update(humidity_sensor_endpoint_id, CLUSTER_ID_HUMID, ATTRIBUTE_ID_HUMID, &matterValue);
+        last_climate_data.humidity = climate_data.humidity;
+    }
+    if (last_climate_data.pressure != climate_data.pressure) {
+        matterValue = esp_matter_int16(climate_data.pressure);
+        attribute::update(pressure_sensor_endpoint_id, CLUSTER_ID_PRESS, ATTRIBUTE_ID_PRESS, &matterValue);
+        last_climate_data.pressure = climate_data.pressure;
+    }
+
     esp_log_level_set("*", ESP_LOG_ERROR);
     
 }
