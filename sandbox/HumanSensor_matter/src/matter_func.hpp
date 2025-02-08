@@ -14,7 +14,7 @@ using namespace esp_matter::endpoint;
 #define CHIP_LOG_LEVEL CHIP_LOG_LEVEL_ERROR // エラーレベルのログのみ出力
 
 constexpr uint8_t HUMAN_SENSOR_PIN = D10;
-bool last_human_sensor_state = false;
+bool last_occupancy_sensor_state = false;
 
 // Matterプラグインユニットデバイスで使用されるクラスターと属性ID
 // Matterデバイスに割り当てられるエンドポイントと属性参照
@@ -96,33 +96,36 @@ void setup_matter() {
     node_t *node =
     node::create(&node_config, on_attribute_update, on_identification);
 
-    // デフォルト値でプラグインユニットエンドポイント/クラスター/属性をセットアップ
-    Serial.println("Setting up plugin unit endpoints...");
-    on_off_plugin_unit::config_t plugin_unit_config;
-    plugin_unit_config.on_off.on_off = false;
-    plugin_unit_config.on_off.lighting.start_up_on_off = false;
-    //　エンドポイントを作成
-    endpoint_t *endpoint_1 = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
-    endpoint_t *endpoint_2 = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
+    // // デフォルト値でプラグインユニットエンドポイント/クラスター/属性をセットアップ
+    // Serial.println("Setting up plugin unit endpoints...");
+    // on_off_plugin_unit::config_t plugin_unit_config;
+    // plugin_unit_config.on_off.on_off = false;
+    // plugin_unit_config.on_off.lighting.start_up_on_off = false;
+    // //　エンドポイントを作成
+    // endpoint_t *endpoint_1 = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
+    // endpoint_t *endpoint_2 = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
 
     // デフォルト値でプラグインユニットエンドポイント/クラスター/属性をセットアップ
     Serial.println("Setting up plugin unit endpoints...");
     light_sensor::config_t illuminance_sensor_config;
     occupancy_sensor::config_t occupancy_sensor_config;
+    illuminance_sensor_config.illuminance_measurement.illuminance_measured_value = (uint16_t)0;
+    occupancy_sensor_config.occupancy_sensing.occupancy = false;
+    last_occupancy_sensor_state = false;
     //　エンドポイントを作成
     endpoint_t *endpoint_illuminance_sensor = light_sensor::create(node, &illuminance_sensor_config, ENDPOINT_FLAG_NONE, NULL);
     endpoint_t *endpoint_occupancy_sensor = occupancy_sensor::create(node, &occupancy_sensor_config, ENDPOINT_FLAG_NONE, NULL);
 
     // 属性参照を保存。後で属性値を読み取るために使用。
     Serial.println("Getting attribute references...");
-    attribute_ref_1 = attribute::get(cluster::get(endpoint_1, CLUSTER_ID), ATTRIBUTE_ID);
-    attribute_ref_2 = attribute::get(cluster::get(endpoint_2, CLUSTER_ID), ATTRIBUTE_ID);
+    // attribute_ref_1 = attribute::get(cluster::get(endpoint_1, CLUSTER_ID), ATTRIBUTE_ID);
+    // attribute_ref_2 = attribute::get(cluster::get(endpoint_2, CLUSTER_ID), ATTRIBUTE_ID);
     attribute_ref_illuminance = attribute::get(cluster::get(endpoint_illuminance_sensor, CLUSTER_ID_LIGHT), ATTRIBUTE_ID_LIGHT);
     attribute_ref_occupancy = attribute::get(cluster::get(endpoint_occupancy_sensor, CLUSTER_ID_OCCUP), ATTRIBUTE_ID_OCCUP);
 
     // 生成されたエンドポイントIDを保存
-    plugin_unit_endpoint_id_1 = endpoint::get_id(endpoint_1);
-    plugin_unit_endpoint_id_2 = endpoint::get_id(endpoint_2);
+    // plugin_unit_endpoint_id_1 = endpoint::get_id(endpoint_1);
+    // plugin_unit_endpoint_id_2 = endpoint::get_id(endpoint_2);
     illuminance_sensor_endpoint_id = endpoint::get_id(endpoint_illuminance_sensor);
     occupancy_sensor_endpoint_id = endpoint::get_id(endpoint_occupancy_sensor);
 
@@ -189,25 +192,21 @@ void loop_matter() {
     //     }
     // }
 
-    // if (digitalRead(HUMAN_SENSOR_PIN) == HIGH) {
-    //     esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
-    //     attribute::get_val(attribute_ref_occupancy, &onoff_value);
-    //     onoff_value.val.b = true;
-    //     attribute::update(occupancy_sensor_endpoint_id, CLUSTER_ID_OCCUP, ATTRIBUTE_ID_OCCUP, &onoff_value);
-    //     if (last_human_sensor_state == false) {
-    //         Serial.println("HIGH");
-    //         last_human_sensor_state = true;
-    //     }
-    // } else {
-    //     esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
-    //     attribute::get_val(attribute_ref_occupancy, &onoff_value);
-    //     onoff_value.val.b = false;
-    //     attribute::update(occupancy_sensor_endpoint_id, CLUSTER_ID_OCCUP, ATTRIBUTE_ID_OCCUP, &onoff_value);
-    //     if (last_human_sensor_state == true) {
-    //         Serial.println("LOW");
-    //         last_human_sensor_state = false;
-    //     }
-    // }
+    if (digitalRead(HUMAN_SENSOR_PIN) == HIGH && last_occupancy_sensor_state == false) {
+        esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
+        attribute::get_val(attribute_ref_occupancy, &onoff_value);
+        onoff_value.val.b = true;
+        attribute::update(occupancy_sensor_endpoint_id, CLUSTER_ID_OCCUP, ATTRIBUTE_ID_OCCUP, &onoff_value);
+        Serial.println("HIGH");
+        last_occupancy_sensor_state = true;
+    } else if (digitalRead(HUMAN_SENSOR_PIN) == LOW && last_occupancy_sensor_state == true) {
+        esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
+        attribute::get_val(attribute_ref_occupancy, &onoff_value);
+        onoff_value.val.b = false;
+        attribute::update(occupancy_sensor_endpoint_id, CLUSTER_ID_OCCUP, ATTRIBUTE_ID_OCCUP, &onoff_value);
+        Serial.println("LOW");
+        last_occupancy_sensor_state = false;
+    }
     // esp_log_level_set("*", ESP_LOG_ERROR);
     delay(1000);
 }
