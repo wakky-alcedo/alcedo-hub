@@ -12,6 +12,12 @@ enum class AC_Mode : uint8_t {
     Heat = kPanasonicAcHeat,
 };
 
+struct AC_Data {
+    bool power;
+    AC_Mode mode;
+    uint8_t temp;
+};
+
 class IrSendAc {
 private:
     IRPanasonicAc pana = IRPanasonicAc(0);
@@ -29,6 +35,7 @@ public:
     void setMode(AC_Mode mode);
     void setPower(bool power);
     uint8_t getTemp();
+    void getData(AC_Data& data);
 };
 
 IrSendAc::IrSendAc(uint16_t IRsendPin) {
@@ -102,6 +109,12 @@ uint8_t IrSendAc::getTemp() {
         default:
             return 25;
     }
+}
+
+void IrSendAc::getData(AC_Data& data) {
+    data.power = power;
+    data.mode = mode;
+    data.temp = getTemp();
 }
 
 #endif // IRSENDAC_HPP_

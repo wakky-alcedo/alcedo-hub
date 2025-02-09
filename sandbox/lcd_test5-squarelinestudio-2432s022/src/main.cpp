@@ -5,20 +5,36 @@
 #include <ui/ui.h>
 #include "display/CST820.h"
 
-// #include <IRremoteESP8266.h>
-// #include <ir_Panasonic.h>
-// #include <IRsend.h>
 #include "IrSendLight.hpp"
 #include "IrSendAC.hpp"
+
+#include <SPI.h>
+#include "SpiDataSync.hpp"
 
 /*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
 
 /*Change to your screen resolution*/
 
+/* IR */
 constexpr uint8_t IR_SEND_PIN = 1;
 // constexpr uint8_t IR_SEND_PIN = 3;
 IrSendLight irsendLight(IR_SEND_PIN);
 IrSendAc irsendAc(IR_SEND_PIN);
+AC_Data ac_data = {false, AC_Mode::Auto, 25};
+
+/* spi通信 */
+#define SPI_SCK 18
+#define SPI_MISO 19
+#define SPI_MOSI 23
+#define SPI_CS 5
+SpiDataSync spi(HSPI);
+
+ClimateData climate_data;
+LightData light_data;
+CurtainData curtain_data;
+FanData fan_data;
+
+uint32_t last_touched_time = 0;
 
 void setup()
 {
@@ -30,14 +46,26 @@ void setup()
     irsendAc.begin();
 
     Serial.println( "Setup done" );
+
+    // SPI
+    spi.master_begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
 }
 
-void loop()
-{
+void loop() {
     display_loop();
-    // delay(5);
+    irsendAc.getData(ac_data);
+    spi.master_sync(climate_data, light_data, ac_data, curtain_data, fan_data);
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%4.1f", climate_data.temperature/10.0f); // スライダーの値を文字列に変換
+    lv_label_set_text(ui_Label3, buf); // ラベルのテキストを更新
+    snprintf(buf, sizeof(buf), "%2d", climate_data.humidity);
+    lv_label_set_text(ui_Label1, buf); // ラベルのテキストを更新
+    snprintf(buf, sizeof(buf), "%4d", climate_data.pressure + 900);
+    lv_label_set_text(ui_Label8, buf); // ラベルのテキストを更新
+    // あとで，他の値もここに入れる
 }
 
+/* Light */
 void SwitchLightClicked(lv_event_t * e) {
     // // スイッチの状態を取得し，ラベルを変更する
     lv_obj_t * sw = lv_event_get_target(e);
@@ -54,17 +82,21 @@ void SwitchLightClicked(lv_event_t * e) {
 /* Aircon */
 void ButtonACOnClickerd(lv_event_t * e)
 {
+    last_touched_time = millis();
     // Serial.println("ButtonACOnClickerd");
 	irsendAc.setPower(true);
 }
 
 void ButtonACOffClicked(lv_event_t * e)
 {
+    last_touched_time = millis();
     irsendAc.setPower(false);
 }
 
 void DropdownACModeChanged(lv_event_t * e)
 {
+    last_touched_time = millis();
+
     // Serial.println("DropdownACModeChanged");
     lv_obj_t * dropdown = lv_event_get_target(e);
     uint16_t value = lv_dropdown_get_selected(dropdown);
