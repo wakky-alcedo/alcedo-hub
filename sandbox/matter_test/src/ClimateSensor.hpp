@@ -5,9 +5,9 @@
 #include <Adafruit_AHTX0.h>
 
 struct ClimateData {
-    uint16_t temperature;
-    uint8_t humidity;
-    uint8_t pressure;
+    uint16_t temperature = 250;
+    uint8_t humidity = 50;
+    uint8_t pressure = 1013 - 900;
 };
 
 class ClimateSensor {
@@ -47,9 +47,9 @@ void ClimateSensor::read(ClimateData& data) {
     sensors_event_t temp_event;
     sensors_event_t humidity_event;
     aht.getEvent(&temp_event, &humidity_event);
-    data.temperature = (uint16_t)((temp_event.temperature + bmp.readTemperature())/2.0f * 10); // AHT20とBMP280の温度を平均
+    data.temperature = (uint16_t)((temp_event.temperature-10 + bmp.readTemperature()-10)/2.0f * 10); // AHT20とBMP280の温度を平均
     data.humidity = (uint8_t)humidity_event.relative_humidity; // AHT20から湿度を取得
-    data.pressure = (uint8_t)(bmp.readPressure() / 100.0F); // BMP280から気圧を取得
+    data.pressure = (uint8_t)(bmp.readPressure() / 100.0F - 900); // BMP280から気圧を取得
 }
 
 #endif // CLIMATESENSOR_HPP_
