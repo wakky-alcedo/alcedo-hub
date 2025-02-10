@@ -1,14 +1,16 @@
 #ifndef CLIMATESENSOR_HPP_
 #define CLIMATESENSOR_HPP_
 
-#include <Adafruit_BMP280.h>
-#include <Adafruit_AHTX0.h>
-
 struct ClimateData {
     uint16_t temperature = 250;
     uint8_t humidity = 50;
     uint8_t pressure = 1013 - 900;
 };
+
+#if __has_include(<Adafruit_AHTX0.h>) && __has_include(<Adafruit_BMP280.h>)
+
+#include <Adafruit_AHTX0.h>
+#include <Adafruit_BMP280.h>
 
 class ClimateSensor {
     public:
@@ -51,5 +53,7 @@ void ClimateSensor::read(ClimateData& data) {
     data.humidity = (uint8_t)humidity_event.relative_humidity; // AHT20から湿度を取得
     data.pressure = (uint8_t)(bmp.readPressure() / 100.0F - 900); // BMP280から気圧を取得
 }
+
+#endif
 
 #endif // CLIMATESENSOR_HPP_

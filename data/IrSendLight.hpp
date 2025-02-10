@@ -2,6 +2,15 @@
 #define IRSENDLIGHT_HPP_
 
 #include <Arduino.h>
+
+struct LightData {
+    bool power = false;
+    uint8_t brightness = 0;
+    uint8_t color_temp = 126;
+};
+
+#if __has_include(<IRremoteESP8266.h>)
+
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
@@ -70,5 +79,7 @@ void IrSendLight::send(uint8_t data) {
 void IrSendLight::send(LightCommand command) {
     send((uint8_t)command);
 }
+
+#endif
 
 #endif // IRSENDLIGHT_HPP_

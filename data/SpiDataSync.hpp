@@ -1,22 +1,12 @@
 #ifndef SPI_DATA_SYNC_HPP_
 #define SPI_DATA_SYNC_HPP_
 
+#include "ClimateSensor.hpp"
 #include "IrSendAC.hpp"
+#include "IrSendLight.hpp"
 #include <SPI.h>
 #include <stdio.h>
 #include <string.h>
-
-struct ClimateData {
-    uint16_t temperature = 250;
-    uint8_t humidity = 50;
-    uint8_t pressure = 1013 - 900;
-};
-
-struct LightData {
-    bool power = false;
-    uint8_t brightness = 0;
-    uint8_t color_temp = 126;
-};
 
 enum class CurtainMode : uint8_t {
     Stop = 0x00,
