@@ -35,13 +35,15 @@ private:
     uint8_t cs_pin;
     uint8_t last_send_data[data_size];
     uint8_t last_receive_data[data_size];
+    void compression_data(uint8_t* send_data, ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan);
+    void decompression_data(uint8_t* receive_data, ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan);
 public:
     SpiDataSync(uint8_t spi_bus=HSPI);
     ~SpiDataSync();
     void master_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin, uint8_t cs_pin);
-    void receive_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin, uint8_t cs_pin, void(*onDataReceived)());
+    void slave_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin, uint8_t cs_pin, void(*onDataReceived)());
     void master_sync(ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan);
-    void receive_sync(ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan);
+    void slave_sync(ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan);
 };
 
 SpiDataSync::SpiDataSync(uint8_t spi_bus)
@@ -59,7 +61,7 @@ void SpiDataSync::master_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_p
     digitalWrite(cs_pin, HIGH);
 }
 
-void SpiDataSync::receive_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin, uint8_t cs_pin, void(*onDataReceived)()) {
+void SpiDataSync::slave_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin, uint8_t cs_pin, void(*onDataReceived)()) {
     spi.begin(sck_pin, miso_pin, mosi_pin, cs_pin);
     this->cs_pin = cs_pin;
     pinMode(cs_pin, INPUT_PULLUP);
@@ -70,22 +72,8 @@ void SpiDataSync::receive_begin(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_
 void SpiDataSync::master_sync (ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan) {
     uint8_t send_data[data_size];
     uint8_t raw_receive_data[data_size];
-    strlcpy((char*)send_data    , (char*)&climate, 4);
-    strlcpy((char*)&send_data[4], (char*)&light.brightness, 1);
-    strlcpy((char*)&send_data[5], (char*)&light.color_temp, 1);
-    send_data[6] = 0; // light, ac
-    send_data[6] |= (uint8_t)light.power;
-    send_data[6] |= (uint8_t)ac.power     << 1;
-    send_data[6] |= (uint8_t)ac.mode      << 2;
-    send_data[6] |= (uint8_t)(ac.temp-16) << 4;
-    send_data[7] = 0; // curtain
-    send_data[7] |= (uint8_t)curtain.mode;
-    send_data[7] |= (uint8_t)curtain.position << 2;
-    send_data[8] = 0; // fan
-    send_data[8] |= (uint8_t)fan.power;
-    send_data[8] |= (uint8_t)fan.speed << 1;
-    send_data[8] |= (uint8_t)fan.is_horizontal_swing << 6;
-    send_data[8] |= (uint8_t)fan.is_vertical_swing << 7;
+
+    compression_data(send_data, climate, light, ac, curtain, fan);
 
     digitalWrite(cs_pin, LOW); // スレーブを選択
     spi.transferBytes(send_data, raw_receive_data, data_size);
@@ -105,6 +93,55 @@ void SpiDataSync::master_sync (ClimateData& climate, LightData& light, AC_Data& 
         last_receive_data[i] = receive_data[i];
     }
 
+    decompression_data(receive_data, climate, light, ac, curtain, fan);
+}
+
+void SpiDataSync::slave_sync (ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan) {
+    uint8_t send_data[data_size];
+    uint8_t raw_receive_data[data_size];
+
+    compression_data(send_data, climate, light, ac, curtain, fan);
+
+    spi.transferBytes(send_data, raw_receive_data, data_size);
+
+    uint8_t receive_data[data_size];
+    for (int i = 0; i < data_size; i++) {
+        uint8_t send_diff = last_send_data[i] ^ send_data[i];
+        uint8_t receive_diff = last_receive_data[i] ^ raw_receive_data[i];
+
+        receive_data[i]  = raw_receive_data[i] & ~(send_diff | receive_diff);   // まず同じところを代入
+        receive_data[i] |= send_data[i]        & send_diff & ~receive_diff;     // sendだけで変化した値を代入
+        // receive_data[i] |= raw_receive_data[i] & ~send_diff & receive_diff;     // receiveだけで変化した値を代入
+        receive_data[i] |= raw_receive_data[i]        & receive_diff;           // receiveで変化した値receiveに問答無用で代入
+
+        last_send_data[i] = send_data[i];
+        last_receive_data[i] = receive_data[i];
+    }
+
+    decompression_data(receive_data, climate, light, ac, curtain, fan);
+}
+
+
+void SpiDataSync::compression_data(uint8_t* send_data, ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan) {
+    strlcpy((char*)send_data    , (char*)&climate, 4);
+    strlcpy((char*)&send_data[4], (char*)&light.brightness, 1);
+    strlcpy((char*)&send_data[5], (char*)&light.color_temp, 1);
+    send_data[6] = 0; // light, ac
+    send_data[6] |= (uint8_t)light.power;
+    send_data[6] |= (uint8_t)ac.power     << 1;
+    send_data[6] |= (uint8_t)ac.mode      << 2;
+    send_data[6] |= (uint8_t)(ac.temp-16) << 4;
+    send_data[7] = 0; // curtain
+    send_data[7] |= (uint8_t)curtain.mode;
+    send_data[7] |= (uint8_t)curtain.position << 2;
+    send_data[8] = 0; // fan
+    send_data[8] |= (uint8_t)fan.power;
+    send_data[8] |= (uint8_t)fan.speed << 1;
+    send_data[8] |= (uint8_t)fan.is_horizontal_swing << 6;
+    send_data[8] |= (uint8_t)fan.is_vertical_swing << 7;
+}
+
+void SpiDataSync::decompression_data(uint8_t* receive_data, ClimateData& climate, LightData& light, AC_Data& ac, CurtainData& curtain, FanData& fan) {
     strlcpy((char*)&climate, (char*)receive_data    , 4);
     strlcpy((char*)&light.brightness, (char*)&receive_data[4], 1);
     strlcpy((char*)&light.color_temp, (char*)&receive_data[5], 1);

@@ -1,7 +1,10 @@
 #ifndef IRSENDAC_HPP_
 #define IRSENDAC_HPP_
 
+#if __has_include(<IRremoteESP8266.h>)
+
 #include <IRremoteESP8266.h>
+#include <IRsend.h>
 #include <ir_Panasonic.h>
 
 enum class AC_Mode : uint8_t {
@@ -116,5 +119,7 @@ void IrSendAc::getData(AC_Data& data) {
     data.mode = mode;
     data.temp = getTemp();
 }
+
+#endif // __has_include(<IRremoteESP8266.h>)
 
 #endif // IRSENDAC_HPP_

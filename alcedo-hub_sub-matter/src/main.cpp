@@ -50,21 +50,32 @@
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include "matter_func.hpp"
 #include "ClimateSensor.hpp"
-
+#include "SpiDataSync.hpp"
 
 // PINを設定してください
 // const int LED_PIN_1 = 2;
 // const int LED_PIN_2 = 4;
 // const int TOGGLE_BUTTON_PIN_1 = 0;
 // const int TOGGLE_BUTTON_PIN_2 = 15;
-// constexpr uint8_t SPI_CS_PIN = 5;
+constexpr uint8_t SPI_CS_PIN = D3;
 
 ClimateSensor sensor;
 ClimateData climate_data;
 
+LightData light_data;
+AC_Data ac_data;
+FanData fan_data;
+CurtainData curtain_data;
+
 // トグルボタンのデバウンス
 const int DEBOUNCE_DELAY = 500;
 int last_toggle;
+
+SpiDataSync spi(HSPI);
+
+void IRAM_ATTR onDataReceived() {
+    spi.slave_sync(climate_data, light_data, ac_data, curtain_data, fan_data);
+}
 
 void setup() {
     delay(5000);
@@ -81,11 +92,14 @@ void setup() {
     setup_matter(); // Matterデバイスのセットアップ
     
     sensor.begin();
+
+    // SPI
+    spi.slave_begin(D8, D9, D10, SPI_CS_PIN, onDataReceived);
 }
 
 
 void loop() {
     sensor.read(climate_data);
 
-    loop_matter(climate_data);
+    loop_matter(climate_data, light_data, ac_data, fan_data, curtain_data);
 }

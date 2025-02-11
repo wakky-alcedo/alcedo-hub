@@ -13,6 +13,9 @@
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include "matter_on_update.hpp"
 #include "ClimateSensor.hpp"
+#include "IrSendLight.hpp"
+#include "IrSendAC.hpp"
+#include "SpiDataSync.hpp"
 using namespace chip;
 namespace clusters = chip::app::Clusters;
 using namespace esp_matter;
@@ -268,18 +271,23 @@ void setup_matter() {
     light_endpoint_id = endpoint::get_id(endpoint_light);
     #elif ENABLE_LIGHT_SWITCH
     // 照明
-    // color_dimmer_switch::config_t light_config;
+    color_dimmer_switch::config_t light_config;
     // on_off_switch::config_t light_config;
     // dimmer_switch::config_t light_config;
     // generic_switch::config_t light_config;
-    dimmable_plugin_unit::config_t light_config;
-    light_config.
+    // on_off_switch::config_t light_config;
     contact_sensor::config_t contact_sensor_config;
     contact_sensor_config.boolean_state.state_value = CONTACT_SENSOR_STATE_OPEN;
  
     endpoint_t *endpoint_light = color_dimmer_switch::create(node, &light_config, ENDPOINT_FLAG_NONE, NULL);
     // attribute_ref_light = attribute::get(cluster::get(endpoint_light, CLUSTER_ID_ONOFF), ATTRIBUTE_ID_ONOFF);
     light_endpoint_id = endpoint::get_id(endpoint_light);
+
+
+    // スイッチのエンドポイントを作成
+    endpoint_t *switch_endpoint = endpoint::create(node, ENDPOINT_FLAG_NONE);
+    // OnOff クライアントを作成
+    on_off::client_t *switch_cluster = on_off::client::create(switch_endpoint);
     #endif
 
     // 扇風機
@@ -338,7 +346,7 @@ void set_onoff_attribute_value(esp_matter_attr_val_t *onoff_value, uint16_t plug
 //   attribute::update(plugin_unit_endpoint_id, CLUSTER_ID, ATTRIBUTE_ID, onoff_value);
 }
 
-void loop_matter(ClimateData &climate_data) {
+void loop_matter(ClimateData &climate_data, LightData &light_data, AC_Data &ac_data, FanData &fan_data, CurtainData &curtain_data) {
     // トグルプラグインユニットボタンが押されたとき（デバウンス付き）、プラグインユニット属性値が変更されます
     // if ((millis() - last_toggle) > DEBOUNCE_DELAY) {
     //     if (!digitalRead(TOGGLE_BUTTON_PIN_1)) {
@@ -357,8 +365,10 @@ void loop_matter(ClimateData &climate_data) {
     //         set_onoff_attribute_value(&onoff_value, plugin_unit_endpoint_id_2);
     //     }
     // }
-    static ClimateData last_climate_data;
 
+    // センサーの値が変更された場合、属性値を更新
+
+    static ClimateData last_climate_data;
     if (last_climate_data.temperature != climate_data.temperature) {
         matterValue = esp_matter_int16(climate_data.temperature*10);
         attribute::update(temperature_sensor_endpoint_id, CLUSTER_ID_TEMP, ATTRIBUTE_ID_TEMP, &matterValue);
@@ -374,6 +384,54 @@ void loop_matter(ClimateData &climate_data) {
         attribute::update(pressure_sensor_endpoint_id, CLUSTER_ID_PRESS, ATTRIBUTE_ID_PRESS, &matterValue);
         last_climate_data.pressure = climate_data.pressure;
     }
+
+    // static LightData last_light_data;
+
+    static AC_Data last_ac_data;
+    if (last_ac_data.mode != ac_data.mode) {
+        matterValue = esp_matter_uint8((uint8_t)ac_data.mode); // 0:Off, 1:Auto, 3:Cool, 4:Heat
+        attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::SystemMode::Id, &matterValue);
+        last_ac_data.mode = ac_data.mode;
+    }
+    if (last_ac_data.temp != ac_data.temp) {
+        matterValue = esp_matter_uint8(ac_data.temp);
+        switch ((uint8_t)ac_data.mode) {
+            case (uint8_t)ac::SystemMode::Cool:
+                attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::OccupiedCoolingSetpoint::Id, &matterValue);
+                break;
+            case (uint8_t)ac::SystemMode::Heat:
+                attribute::update(ac_endpoint_id, CLUSTER_ID_AC, clusters::Thermostat::Attributes::OccupiedHeatingSetpoint::Id, &matterValue);
+                break;
+            default:
+                break;
+        }
+        last_ac_data.temp = ac_data.temp;
+    }
+
+    static FanData last_fan_data;
+    if (last_fan_data.power != fan_data.power) {
+        matterValue = esp_matter_uint8((uint8_t)fan_data.power);
+        attribute::update(fan_endpoint_id, CLUSTER_ID_FAN, clusters::FanControl::Attributes::FanMode::Id, &matterValue);
+        last_fan_data.power = fan_data.power;
+    }
+    // if (last_fan_data. != fan_data.fanModeSequence) {
+    //     matterValue = esp_matter_uint8(fan_data.fanModeSequence);
+    //     attribute::update(fan_endpoint_id, CLUSTER_ID_FAN, clusters::FanControl::Attributes::FanModeSequence::Id, &matterValue);
+    //     last_fan_data.fanModeSequence = fan_data.fanModeSequence;
+    // }
+    if (last_fan_data.speed != fan_data.speed) {
+        matterValue = esp_matter_uint8(fan_data.speed*8);
+        attribute::update(fan_endpoint_id, CLUSTER_ID_FAN, clusters::FanControl::Attributes::PercentSetting::Id, &matterValue);
+        last_fan_data.speed = fan_data.speed;
+    }
+
+    // static CurtainData last_curtain_data;
+    // if (last_curtain_data.position != curtain_data.position) {
+    //     matterValue = esp_matter_uint8(curtain_data.position);
+    //     attribute::update(curtain_data.endpoint_id, curtain_data.cluster_id, curtain_data.attribute_id, &matterValue);
+    //     last_curtain_data.position = curtain_data.position;
+    // }
+
 
     esp_log_level_set("*", ESP_LOG_ERROR);
     
