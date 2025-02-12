@@ -1,47 +1,53 @@
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+#include <NimBLEDevice.h>        // NimBLE 関連の基本設定
+// #include <NimBLECharacteristic.h> // NimBLE 関連のキャラクタリスティック
+// #include <NimBLEDescriptor.h>     // NimBLE2902 などのデスクリプタ
+#include <BLE2902.h>              // NimBLE2902 のヘッダファイル
 
 #define SERVICE_UUID        "12345678-1234-5678-1234-56789abcdef0"
 #define CHARACTERISTIC_UUID "87654321-4321-6789-4321-abcdef987650"
 
-BLEServer* pServer = NULL;
-BLECharacteristic* pCharacteristic = NULL;
+NimBLECharacteristic* pCharacteristic;
 bool deviceConnected = false;
 int lastSensorValue = -1;  // 前回のセンサーデータ
 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
+// コールバック関数
+class MyServerCallbacks: public NimBLEServerCallbacks {
+    void onConnect(NimBLEServer* pServer) {
         deviceConnected = true;
     }
 
-    void onDisconnect(BLEServer* pServer) {
+    void onDisconnect(NimBLEServer* pServer) {
         deviceConnected = false;
     }
 };
 
 void setup() {
     Serial.begin(115200);
-    BLEDevice::init("ESP32_Peripheral");
+    NimBLEDevice::init("ESP32_Peripheral");
 
-    pServer = BLEDevice::createServer();
+    // サーバー作成
+    NimBLEServer* pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(new MyServerCallbacks());
 
-    BLEService *pService = pServer->createService(SERVICE_UUID);
+    // サービス作成
+    NimBLEService* pService = pServer->createService(SERVICE_UUID);
 
+    // キャラクタリスティック作成 (Notifyプロパティ)
     pCharacteristic = pService->createCharacteristic(
-                        CHARACTERISTIC_UUID,
-                        BLECharacteristic::PROPERTY_NOTIFY
-                      );
+                            CHARACTERISTIC_UUID,
+                            NIMBLE_PROPERTY::NOTIFY
+                        );
 
-    pCharacteristic->addDescriptor(new BLE2902());
+    // NimBLE2902 Descriptor を追加
+    pCharacteristic->addDescriptor(new NimBLE2902());  // ここで問題の部分を修正
+
     pService->start();
 
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    // アドバタイズ開始
+    NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
-    pServer->getAdvertising()->start();
+    pAdvertising->start();
     Serial.println("Peripheral started");
 }
 

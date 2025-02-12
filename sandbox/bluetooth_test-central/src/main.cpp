@@ -1,37 +1,38 @@
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEScan.h>
-#include <BLEAdvertisedDevice.h>
-#include <BLEClient.h>
+#include <NimBLEDevice.h>
+#include <NimBLECharacteristic.h>
+#include <BLE2902.h>              // NimBLE2902 のヘッダファイル
 
 #define SERVICE_UUID        "12345678-1234-5678-1234-56789abcdef0"
 #define CHARACTERISTIC_UUID "87654321-4321-6789-4321-abcdef987650"
 
-static BLEAdvertisedDevice* myDevice;
+static NimBLEAdvertisedDevice* myDevice;
 bool doConnect = false;
-BLEClient* pClient = NULL;
-BLERemoteCharacteristic* pRemoteCharacteristic = NULL;
+NimBLEClient* pClient = nullptr;
+BLERemoteCharacteristic* pRemoteCharacteristic = nullptr;
 
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-    void onResult(BLEAdvertisedDevice advertisedDevice) {
-        if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(BLEUUID(SERVICE_UUID))) {
-            myDevice = new BLEAdvertisedDevice(advertisedDevice);
+// アドバタイズされたデバイスが見つかった時のコールバック
+class MyAdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
+    void onResult(NimBLEAdvertisedDevice advertisedDevice) {
+        if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(NimBLEUUID(SERVICE_UUID))) {
+            myDevice = new NimBLEAdvertisedDevice(advertisedDevice);
             advertisedDevice.getScan()->stop();
             doConnect = true;
         }
     }
 };
 
-class MyClientCallback: public BLEClientCallbacks {
-    void onConnect(BLEClient* pClient) {
+// 接続後のコールバック
+class MyClientCallback: public NimBLEClientCallbacks {
+    void onConnect(NimBLEClient* pClient) {
         Serial.println("Connected to Peripheral");
     }
-    void onDisconnect(BLEClient* pClient) {
+    void onDisconnect(NimBLEClient* pClient) {
         Serial.println("Disconnected from Peripheral");
     }
 };
 
+// Notify 受信時のコールバック
 void onNotify(BLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     Serial.print("Received: ");
     Serial.println((char*)pData);
@@ -39,9 +40,10 @@ void onNotify(BLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, si
 
 void setup() {
     Serial.begin(115200);
-    BLEDevice::init("");
+    NimBLEDevice::init("");
 
-    BLEScan* pBLEScan = BLEDevice::getScan();
+    // スキャン開始
+    NimBLEScan* pBLEScan = NimBLEDevice::getScan();
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setInterval(100);
     pBLEScan->setWindow(99);
@@ -51,16 +53,21 @@ void setup() {
 
 void loop() {
     if (doConnect) {
-        pClient = BLEDevice::createClient();
+        // Peripheral に接続
+        pClient = NimBLEDevice::createClient();
         pClient->setClientCallbacks(new MyClientCallback());
 
         if (pClient->connect(myDevice)) {
-            BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
+            Serial.println("Connected to Peripheral");
+
+            // サービス取得
+            BLERemoteService* pRemoteService = pClient->getService(NimBLEUUID(SERVICE_UUID));
             if (pRemoteService) {
-                pRemoteCharacteristic = pRemoteService->getCharacteristic(BLEUUID(CHARACTERISTIC_UUID));
+                // キャラクタリスティック取得
+                pRemoteCharacteristic = pRemoteService->getCharacteristic(NimBLEUUID(CHARACTERISTIC_UUID));
                 if (pRemoteCharacteristic) {
                     if (pRemoteCharacteristic->canNotify()) {
-                        pRemoteCharacteristic->registerForNotify(onNotify);
+                        pRemoteCharacteristic->registerForNotify(onNotify);  // Notifyを受け取る
                     }
                 }
             }
