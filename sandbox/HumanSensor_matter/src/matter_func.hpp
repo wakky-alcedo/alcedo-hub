@@ -13,6 +13,8 @@ using namespace esp_matter::endpoint;
 
 #define CHIP_LOG_LEVEL CHIP_LOG_LEVEL_ERROR // エラーレベルのログのみ出力
 
+#define ENABLE_DELAY 0
+
 constexpr uint8_t HUMAN_SENSOR_PIN = D10;
 bool last_occupancy_sensor_state = false;
 bool last_home_occupancy_state = false;
@@ -81,22 +83,15 @@ static esp_err_t on_attribute_update(attribute::callback_type_t type,
                    void *priv_data) {
     if (type == attribute::PRE_UPDATE) {
         if (endpoint_id == plug_communication_endpoint_id) {
-            if (cluster_id == CLUSTER_ID_OCCUP && attribute_id == ATTRIBUTE_ID_ONOFF) {
+            if (cluster_id == CLUSTER_ID_ONOFF && attribute_id == ATTRIBUTE_ID_ONOFF) {
                 // プラグインユニットのオン/オフ属性の更新を受け取りました！
                 bool new_state = val->val.b;
                 if (new_state) {
                     last_door_open_time = millis();
-                    // ドアが開くより5秒以上前に人感センサが反応している場合は、在宅中にドアが空いたとみなす
-                    if (last_occupancy_time != 0 && (millis() - last_occupancy_time) > 5000) { // 内側からドアを開けた場合
-                        is_occupancy_when_last_door_open = true;
-                        Serial.println("Occupancy sensor is already updated.");
-                    } else { // 外からドアを開けた場合
-                        is_occupancy_when_last_door_open = false;
-                        home_occupancy_state = true;
-                        Serial.println("Occupancy sensor is not updated.");
-                    }
+                    Serial.println("Door is opened.");
                 } else {
                     last_door_close_time = millis();
+                    Serial.println("Door is closed.");
                 }
             }
         }
@@ -118,17 +113,8 @@ void setup_matter() {
     // Matterノードをセットアップ
     Serial.println("Setting up Matter node...");
     node::config_t node_config;
-    node_t *node =
-    node::create(&node_config, on_attribute_update, on_identification);
-
-    // // デフォルト値でプラグインユニットエンドポイント/クラスター/属性をセットアップ
-    // Serial.println("Setting up plugin unit endpoints...");
-    // on_off_plugin_unit::config_t plugin_unit_config;
-    // plugin_unit_config.on_off.on_off = false;
-    // plugin_unit_config.on_off.lighting.start_up_on_off = false;
-    // //　エンドポイントを作成
-    // endpoint_t *endpoint_1 = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
-    // endpoint_t *endpoint_2 = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
+    snprintf(node_config.root_node.basic_information.node_label, sizeof(node_config.root_node.basic_information.node_label), "Alcedo Entrance");
+    node_t *node = node::create(&node_config, on_attribute_update, on_identification);
 
     // デフォルト値でプラグインユニットエンドポイント/クラスター/属性をセットアップ
     Serial.println("Setting up plugin unit endpoints...");
@@ -136,21 +122,25 @@ void setup_matter() {
     illuminance_sensor_config.illuminance_measurement.illuminance_measured_value = (uint16_t)0;
     occupancy_sensor::config_t occupancy_sensor_config;
     occupancy_sensor_config.occupancy_sensing.occupancy = false;
+    last_occupancy_sensor_state = false;
     occupancy_sensor::config_t home_occupancy_sensor_config;
     home_occupancy_sensor_config.occupancy_sensing.occupancy = false;
-    last_occupancy_sensor_state = false;
+    last_home_occupancy_state = false;
+    on_off_plugin_unit::config_t plugin_unit_config;
+    plugin_unit_config.on_off.on_off = false;
+    plugin_unit_config.on_off.lighting.start_up_on_off = false;
     //　エンドポイントを作成
     endpoint_t *endpoint_illuminance_sensor = light_sensor::create(node, &illuminance_sensor_config, ENDPOINT_FLAG_NONE, NULL);
     endpoint_t *endpoint_occupancy_sensor = occupancy_sensor::create(node, &occupancy_sensor_config, ENDPOINT_FLAG_NONE, NULL);
     endpoint_t *endpoint_home_occupancy_sensor = occupancy_sensor::create(node, &home_occupancy_sensor_config, ENDPOINT_FLAG_NONE, NULL);
-    endpoint_t *endpoint_plug_communication = occupancy_sensor::create(node, &home_occupancy_sensor_config, ENDPOINT_FLAG_NONE, NULL);
+    endpoint_t *endpoint_plug_communication = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, NULL);
 
     // 属性参照を保存。後で属性値を読み取るために使用。
     Serial.println("Getting attribute references...");
     attribute_ref_illuminance = attribute::get(cluster::get(endpoint_illuminance_sensor, CLUSTER_ID_LIGHT), ATTRIBUTE_ID_LIGHT);
     attribute_ref_occupancy = attribute::get(cluster::get(endpoint_occupancy_sensor, CLUSTER_ID_OCCUP), ATTRIBUTE_ID_OCCUP);
     attribute_ref_home_occupancy = attribute::get(cluster::get(endpoint_home_occupancy_sensor, CLUSTER_ID_OCCUP), ATTRIBUTE_ID_OCCUP);
-    attribute_ref_plug_communication = attribute::get(cluster::get(endpoint_plug_communication, CLUSTER_ID_OCCUP), ATTRIBUTE_ID_OCCUP);
+    attribute_ref_plug_communication = attribute::get(cluster::get(endpoint_plug_communication, CLUSTER_ID_ONOFF), ATTRIBUTE_ID_ONOFF);
 
     // 生成されたエンドポイントIDを保存
     illuminance_sensor_endpoint_id = endpoint::get_id(endpoint_illuminance_sensor);
@@ -186,41 +176,26 @@ void setup_matter() {
 
     Serial.println("Matter device setup complete");
 }
-#endif // MATTER_FUNC_HPP_
-
-
-// プラグインユニットのオン/オフ属性値を読み取ります
-// esp_matter_attr_val_t get_onoff_attribute_value(esp_matter::attribute_t *attribute_) {
-//     esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
-//     attribute::get_val(attribute_ref, &onoff_value);
-//     return onoff_value;
-// }
-
-// プラグインユニットのオン/オフ属性値を設定します
-void set_onoff_attribute_value(esp_matter_attr_val_t *onoff_value, uint16_t plugin_unit_endpoint_id) {
-//   attribute::update(plugin_unit_endpoint_id, CLUSTER_ID, ATTRIBUTE_ID, onoff_value);
-}
 
 void loop_matter() {
-    // トグルプラグインユニットボタンが押されたとき（デバウンス付き）、プラグインユニット属性値が変更されます
-    // if ((millis() - last_toggle) > DEBOUNCE_DELAY) {
-    //     if (!digitalRead(TOGGLE_BUTTON_PIN_1)) {
-    //         last_toggle = millis();
-    //         // 実際のオン/オフ値を読み取り、反転して設定
-    //         esp_matter_attr_val_t onoff_value = get_onoff_attribute_value(attribute_ref_1);
-    //         onoff_value.val.b = !onoff_value.val.b;
-    //         set_onoff_attribute_value(&onoff_value, plugin_unit_endpoint_id_1);
-    //     }
 
-    //     if (!digitalRead(TOGGLE_BUTTON_PIN_2)) {
-    //         last_toggle = millis();
-    //         // 実際のオン/オフ値を読み取り、反転して設定
-    //         esp_matter_attr_val_t onoff_value = get_onoff_attribute_value(attribute_ref_2);
-    //         onoff_value.val.b = !onoff_value.val.b;
-    //         set_onoff_attribute_value(&onoff_value, plugin_unit_endpoint_id_2);
-    //     }
-    // }
-
+    // ドアの状態を更新
+    // ドアが開くより5秒以上前に人感センサが反応している場合は、在宅中にドアが空いたとみなす
+    if (last_door_open_time != 0 && 5000 < (millis() - last_door_open_time) && (millis() - last_door_open_time) < 6000) { // ドアが空いてから5秒後に
+        if (last_occupancy_time != 0 && (millis() - last_occupancy_time) < 5000 + 5000 + 60000) { // 内側からドアを開けた場合 一定時間内に人感があったとき
+            is_occupancy_when_last_door_open = true;
+            Serial.println("Occupancy sensor is already updated.");
+            #if !ENABLE_DELAY
+            home_occupancy_state = false;
+            #endif
+        } else { // 外からドアを開けた場合
+            is_occupancy_when_last_door_open = false;
+            home_occupancy_state = true;
+            Serial.println("Occupancy sensor is not updated.");
+        }
+    }
+    if (millis() - last_door_close_time < 5000) {
+    }
 
     // 人感センサの状態を更新
     if (digitalRead(HUMAN_SENSOR_PIN) == HIGH) {
@@ -243,26 +218,36 @@ void loop_matter() {
         last_occupancy_sensor_state = false;
     }
 
+    Serial.println("Home occupancy State: " + String(home_occupancy_state));
+    Serial.println("Occupancy Sensor State: " + String(digitalRead(HUMAN_SENSOR_PIN)));
+    Serial.println("Door Open Time: " + String(last_door_open_time));
+    Serial.println("Door Close Time: " + String(last_door_close_time));
+    Serial.println("Occupancy Time: " + String(last_occupancy_time));
+
     // 在宅状態の更新
+    #if ENABLE_DELAY    
     if (is_occupancy_when_last_door_open) { // 前回内側からドアを開けた場合
+        #if ENABLE_DELAY
         if (millis() - last_occupancy_time > 1000 * 120 && last_occupancy_time - last_door_close_time < 5000) { // 前回の人感から2分以上経過，かつドアが閉まってから5秒以降に人感の反応がない場合
+        #else
+        if (millis() - last_occupancy_time > 1000 * 120) { // 前回の人感から2分以上経過
+        #endif
             home_occupancy_state = false;
-            if (last_home_occupancy_state == true) {
-                esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
-                attribute::get_val(attribute_ref_home_occupancy, &onoff_value);
-                onoff_value.val.b = false;
-                attribute::update(home_occupancy_sensor_endpoint_id, CLUSTER_ID_OCCUP, ATTRIBUTE_ID_OCCUP, &onoff_value);
-                Serial.println("Home occupancy is false");
-                last_home_occupancy_state = false;
-            }
         }
     } else { // 前回外側からドアを開けた場合
-        if (millis() - last_door_open_time < 30000) { // 前回のドア開閉から30秒以内
-            home_occupancy_state = true;
-        }
+        // if (millis() - last_door_open_time < 30000) { // 前回のドア開閉から30秒以内
+        //     home_occupancy_state = true;
+        // }
     }
-
-    if (home_occupancy_state = true && last_home_occupancy_state == false) {
+    #endif
+    if (home_occupancy_state == false && last_home_occupancy_state == true) {
+        esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
+        attribute::get_val(attribute_ref_home_occupancy, &onoff_value); // ここいらなくない？
+        onoff_value.val.b = false;
+        attribute::update(home_occupancy_sensor_endpoint_id, CLUSTER_ID_OCCUP, ATTRIBUTE_ID_OCCUP, &onoff_value);
+        Serial.println("Home occupancy is false");
+        last_home_occupancy_state = false;
+    } else if (home_occupancy_state == true && last_home_occupancy_state == false) {
         esp_matter_attr_val_t onoff_value = esp_matter_invalid(NULL);
         attribute::get_val(attribute_ref_home_occupancy, &onoff_value);
         onoff_value.val.b = true;
@@ -274,3 +259,5 @@ void loop_matter() {
     // esp_log_level_set("*", ESP_LOG_ERROR);
     delay(1000);
 }
+
+#endif // MATTER_FUNC_HPP_
