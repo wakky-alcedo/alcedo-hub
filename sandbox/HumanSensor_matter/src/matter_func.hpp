@@ -179,10 +179,12 @@ void setup_matter() {
 
 void loop_matter() {
 
+    Serial.println("--------------------");
+
     // ドアの状態を更新
     // ドアが開くより5秒以上前に人感センサが反応している場合は、在宅中にドアが空いたとみなす
     if (last_door_open_time != 0 && 5000 < (millis() - last_door_open_time) && (millis() - last_door_open_time) < 6000) { // ドアが空いてから5秒後に
-        if (last_occupancy_time != 0 && (millis() - last_occupancy_time) < 5000 + 5000 + 60000) { // 内側からドアを開けた場合 一定時間内に人感があったとき
+        if (last_occupancy_time != 0 && (millis() - last_occupancy_time) < 5000 + 5000 + 15000) { // 内側からドアを開けた場合 一定時間内に人感があったとき
             is_occupancy_when_last_door_open = true;
             Serial.println("Occupancy sensor is already updated.");
             #if !ENABLE_DELAY

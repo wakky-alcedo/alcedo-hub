@@ -5,7 +5,7 @@
 #define ENABLE_SENSOR_2 1
 #define ENABLE_IR 1
 #define ENABLE_IR_LIGHT 0
-#define ENABLE_LIGHT_SWITCH 0
+#define ENABLE_LIGHT_SWITCH 1
 
 #include <Arduino.h>
 #include "Matter.h"
@@ -277,17 +277,17 @@ void setup_matter() {
     // generic_switch::config_t light_config;
     // on_off_switch::config_t light_config;
     contact_sensor::config_t contact_sensor_config;
-    contact_sensor_config.boolean_state.state_value = CONTACT_SENSOR_STATE_OPEN;
+    // contact_sensor_config.boolean_state.state_value = CONTACT_SENSOR_STATE_OPEN;
  
     endpoint_t *endpoint_light = color_dimmer_switch::create(node, &light_config, ENDPOINT_FLAG_NONE, NULL);
     // attribute_ref_light = attribute::get(cluster::get(endpoint_light, CLUSTER_ID_ONOFF), ATTRIBUTE_ID_ONOFF);
     light_endpoint_id = endpoint::get_id(endpoint_light);
 
 
-    // スイッチのエンドポイントを作成
-    endpoint_t *switch_endpoint = endpoint::create(node, ENDPOINT_FLAG_NONE);
-    // OnOff クライアントを作成
-    on_off::client_t *switch_cluster = on_off::client::create(switch_endpoint);
+    // // スイッチのエンドポイントを作成
+    // endpoint_t *switch_endpoint = endpoint::create(node, ENDPOINT_FLAG_NONE);
+    // // OnOff クライアントを作成
+    // cluster::on_off::client_t *switch_cluster = clusteron_off::client::create(switch_endpoint);
     #endif
 
     // 扇風機
