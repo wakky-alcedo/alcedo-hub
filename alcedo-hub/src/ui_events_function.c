@@ -1,22 +1,17 @@
 #include <lvgl.h>
 #include <ui/ui.h>
 #include <stdio.h>
+#include "arduino.h"
 // #include "ir_dif.cpp"
 // #include "IrSendLight.hpp"
+uint32_t last_touched_time = 0;
 
 /* Light */
-
-// void SwitchLightClicked(lv_event_t * e) {
-//     // // スイッチの状態を取得し，ラベルを変更する
-//     lv_obj_t * sw = lv_event_get_target(e);
-//     bool state = lv_obj_has_state(sw, LV_STATE_CHECKED);
-
-//     if (state) {
-//         // irsendLight.send(LightCmmand::On);
-//     } else {
-//         // irsendLight.send(LightCmmand::Off);
-//     }
-// }
+void SwitchLightClicked(lv_event_t * e) {
+    // // スイッチの状態を取得し，ラベルを変更する
+    lv_obj_t * sw = lv_event_get_target(e);
+    bool state = lv_obj_has_state(sw, LV_STATE_CHECKED);
+}
 
 void SliderBrightnessChanged(lv_event_t * e) {
     // スライダーの値を取得し，明るさラベルを変更する
@@ -46,28 +41,70 @@ void SliderColorChanged(lv_event_t * e)
 }
 
 /* Aircon */
+void ButtonACOnClickerd(lv_event_t * e)
+{
+    last_touched_time = millis();
+    // Serial.println("ButtonACOnClickerd");
+}
 
-// void ButtonTempUpClicked(lv_event_t * e)
-// {
-// 	// ui_LabelTemp の値を取得し，1増やして設定する
-//     lv_obj_t * lavel = ui_LabelTemp;
-//     int value = atoi(lv_label_get_text(lavel));
-//     value++;
-//     char buf[8];
-//     snprintf(buf, sizeof(buf), "%d", value);
-//     lv_label_set_text(lavel, buf);
-// }
+void ButtonACOffClicked(lv_event_t * e)
+{
+    last_touched_time = millis();
+}
 
-// void ButtonTempDownClicked(lv_event_t * e)
-// {
-// 	// ui_LabelTemp の値を取得し，1減らして設定する
-//     lv_obj_t * lavel = ui_LabelTemp;
-//     int value = atoi(lv_label_get_text(lavel));
-//     value--;
-//     char buf[8];
-//     snprintf(buf, sizeof(buf), "%d", value);
-//     lv_label_set_text(lavel, buf);
-// }
+void DropdownACModeChanged(lv_event_t * e)
+{
+    last_touched_time = millis();
+
+    // Serial.println("DropdownACModeChanged");
+    lv_obj_t * dropdown = lv_event_get_target(e);
+    uint16_t value = lv_dropdown_get_selected(dropdown);
+    switch (value) {
+    case 0:
+        // Serial.println("Auto");
+        break;
+    case 1:
+        // Serial.println("Cool");
+        break;
+    case 2:
+        // Serial.println("Heat");
+        break;
+    case 3:
+        // Serial.println("Dry");
+        break;
+    default:
+        break;
+    }
+
+    // 温度ラベルの更新
+    lv_obj_t * lavel = ui_LabelTemp;
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d", value);
+    lv_label_set_text(lavel, buf);
+}
+
+
+void ButtonTempUpClicked(lv_event_t * e)
+{
+	// ui_LabelTemp の値を取得し，1増やして設定する
+    lv_obj_t * lavel = ui_LabelTemp;
+    int value = atoi(lv_label_get_text(lavel));
+    value++;
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d", value);
+    lv_label_set_text(lavel, buf);
+}
+
+void ButtonTempDownClicked(lv_event_t * e)
+{
+	// ui_LabelTemp の値を取得し，1減らして設定する
+    lv_obj_t * lavel = ui_LabelTemp;
+    int value = atoi(lv_label_get_text(lavel));
+    value--;
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d", value);
+    lv_label_set_text(lavel, buf);
+}
 
 /* Curtain */
 
